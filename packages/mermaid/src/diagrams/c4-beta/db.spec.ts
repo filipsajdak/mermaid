@@ -109,7 +109,7 @@ describe('c4-beta db', () => {
       expect(customer?.isGroup).toBe(false);
       expect(customer?.shape).toBe('c4-person');
       expect(customer?.cssClasses).toBe('c4-shape c4-person');
-      expect(customer?.cssStyles).toEqual(['fill: #08427B', 'stroke: #073B6F']);
+      expect(customer?.cssStyles).toEqual([]);
       expect(customer?.label).toBe(
         '<small>&laquo;Person&raquo;</small><br/><b>Personal Banking Customer</b><br/>A customer of the bank.'
       );
@@ -246,20 +246,14 @@ describe('c4-beta db', () => {
     });
 
     describe('tag styles', () => {
-      it('should apply tag styles to elements after the built-in kind colors', async () => {
+      it('should apply tag styles to elements as inline styles', async () => {
         await populate(`c4-beta context
           style web fill:#1F2937, stroke:#111827, color:#fff
           softwareSystem banking "Internet Banking System" :::web
         `);
         const { nodes } = db.getData();
         expect(nodes[0].cssClasses).toBe('c4-shape c4-softwareSystem c4-tag-web');
-        expect(nodes[0].cssStyles).toEqual([
-          'fill: #1168BD',
-          'stroke: #3C7FC0',
-          'fill: #1F2937',
-          'stroke: #111827',
-          'color: #fff',
-        ]);
+        expect(nodes[0].cssStyles).toEqual(['fill: #1F2937', 'stroke: #111827', 'color: #fff']);
       });
 
       it('should map shape:cylinder to the cylinder shape', async () => {
@@ -305,7 +299,7 @@ describe('c4-beta db', () => {
         );
         const { nodes } = db.getData();
         expect(nodes[0].shape).toBe('rect');
-        expect(nodes[0].cssStyles).toEqual(['fill: #1168BD', 'stroke: #3C7FC0']);
+        expect(nodes[0].cssStyles).toEqual([]);
         warnSpy.mockRestore();
       });
 
