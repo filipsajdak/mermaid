@@ -39,12 +39,29 @@ describe('c4-beta styles', () => {
       arrowheadColor: '#555555',
       edgeLabelBackground: '#dddddd',
       titleColor: '#666666',
+      c4PersonBkg: '#08427B',
+      c4PersonBorder: '#073B6F',
+      c4SystemBkg: '#1168BD',
+      c4SystemBorder: '#3C7FC0',
+      c4ContainerBkg: '#438DD5',
+      c4ContainerBorder: '#3C7FC0',
+      c4ComponentBkg: '#85BBF0',
+      c4ComponentBorder: '#78A8D8',
+      c4ExternalBkg: '#999999',
+      c4ExternalBorder: '#8A8A8A',
+      c4BoundaryBorder: '#777777',
+      c4TextColor: '#fefefe',
     });
     expect(css).toContain('.c4-shape');
     expect(css).toContain('path.c4-rel');
     expect(css).toContain('stroke-dasharray');
     expect(css).toContain('#444444');
     expect(css).toContain('#666666');
+    expect(css).toContain('.c4-person rect');
+    expect(css).toContain('#08427B');
+    expect(css).toContain('#999999');
+    expect(css).toContain('#777777');
+    expect(css).toContain('#fefefe');
   });
 });
 
@@ -123,6 +140,25 @@ spa --> api : "Calls"
     );
     const matches = svg.match(/2\. (Reads|Notifies)/g) ?? [];
     expect(matches).toHaveLength(2);
+  });
+
+  jsdomIt('should use theme-driven element fills that differ in the dark theme', async () => {
+    const text = `c4-beta context
+person customer "Customer"
+`;
+    const { svg: defaultSvg } = await mermaidAPI.render('c4beta-render-theme-1', text);
+    const { svg: darkSvg } = await mermaidAPI.render(
+      'c4beta-render-theme-2',
+      `---
+config:
+  theme: dark
+---
+${text}`
+    );
+    const personFill = (svg: string) => /\.c4-person rect[^{}]*{fill:([^;]+);/.exec(svg)?.[1];
+    expect(personFill(defaultSvg)).toBe('#08427B');
+    expect(personFill(darkSvg)).toBeDefined();
+    expect(personFill(darkSvg)).not.toBe(personFill(defaultSvg));
   });
 
   jsdomIt('should render deployment nodes as clusters', async () => {
