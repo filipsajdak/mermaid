@@ -55,6 +55,7 @@ interface C4Db {
   getBoundaries: (parentBoundary?: string) => C4Boundary[];
   getRels: () => C4Rel[];
   getC4Type: () => string;
+  getDirection: () => string;
 }
 
 const QUEUE_SHAPES = new Set([
@@ -239,6 +240,7 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
   return {
     nodes,
     edges,
+    direction: db.getDirection(),
     config,
   };
 };

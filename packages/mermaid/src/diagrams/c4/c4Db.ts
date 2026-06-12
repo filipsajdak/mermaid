@@ -33,6 +33,7 @@ let parentBoundaryParse = '';
 let boundaries: C4Boundary[] = [createGlobalBoundary()];
 let rels: C4Rel[] = [];
 let title = '';
+let direction = 'TB';
 let wrapEnabled: boolean | undefined = false;
 let c4ShapeInRow = 4;
 let c4BoundaryInRow = 2;
@@ -785,6 +786,14 @@ export const getTitle = function () {
   return title;
 };
 
+export const setDirection = function (dir: string) {
+  direction = dir;
+};
+
+export const getDirection = function () {
+  return direction;
+};
+
 export const setWrap = function (wrapSetting?: boolean) {
   wrapEnabled = wrapSetting;
 };
@@ -803,6 +812,7 @@ export const clear = function () {
 
   boundaryParseStack = [''];
   title = '';
+  direction = 'TB';
   wrapEnabled = false;
   c4ShapeInRow = 4;
   c4BoundaryInRow = 2;
@@ -873,6 +883,8 @@ export default {
   getParentBoundaryParse,
   getRels,
   getTitle,
+  setDirection,
+  getDirection,
   getC4Type,
   getC4ShapeInRow,
   getC4BoundaryInRow,
