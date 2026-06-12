@@ -169,6 +169,32 @@ Person(a, "A", "desc", $tags="undefinedTag")
     expect(a?.cssClasses).toContain('c4-tag-undefinedTag');
   });
 
+  it('maps $sprite to an icon node rendered with the icon shape', () => {
+    parse(`C4Context
+Person(a, "A", "desc", $sprite="logos:aws-lambda")
+System(b, "B")
+`);
+    const { nodes } = data();
+    expect(nodes.find((n) => n.id === 'a')).toMatchObject({
+      icon: 'logos:aws-lambda',
+      shape: 'iconRounded',
+    });
+    expect(nodes.find((n) => n.id === 'b')).toMatchObject({
+      icon: undefined,
+      shape: 'rect',
+    });
+  });
+
+  it('maps $sprite stored in an earlier positional slot', () => {
+    parse(`C4Context
+Person(a, "A", $sprite="logos:aws-lambda")
+`);
+    expect(data().nodes.find((n) => n.id === 'a')).toMatchObject({
+      icon: 'logos:aws-lambda',
+      shape: 'iconRounded',
+    });
+  });
+
   it('passes the diagram direction to the layout data', () => {
     parse(`C4Context
 direction LR

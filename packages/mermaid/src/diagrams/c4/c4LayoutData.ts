@@ -13,7 +13,15 @@ interface C4Text {
   text: string;
 }
 
-type C4Tags = string | C4Text | null;
+/**
+ * The legacy db stores kv attribute values ($tags, $sprite, ...) either as a
+ * plain string or wrapped in a `{ text }` object depending on which
+ * positional slot the kv landed in.
+ */
+type C4Attribute = string | C4Text | null;
+
+const attributeText = (value?: C4Attribute): string | undefined =>
+  typeof value === 'string' ? value : value?.text;
 
 interface C4Shape {
   alias: string;
@@ -26,7 +34,8 @@ interface C4Shape {
   fontColor?: string;
   borderColor?: string;
   link?: string;
-  tags?: C4Tags;
+  tags?: C4Attribute;
+  sprite?: C4Attribute;
 }
 
 interface C4Boundary {
@@ -40,7 +49,7 @@ interface C4Boundary {
   fontColor?: string;
   borderColor?: string;
   link?: string;
-  tags?: C4Tags;
+  tags?: C4Attribute;
 }
 
 interface C4Rel {
@@ -52,7 +61,7 @@ interface C4Rel {
   descr?: C4Text;
   textColor?: string;
   lineColor?: string;
-  tags?: C4Tags;
+  tags?: C4Attribute;
 }
 
 export interface C4ElementTag {
@@ -175,11 +184,9 @@ const elementCssStyles = (
 /**
  * Tag names assigned to an element or rel via $tags. C4-PlantUML separates
  * multiple tags with `+` (e.g. "v1.0+deprecated"); commas are accepted too.
- * The legacy db stores the value either as a plain string or wrapped in a
- * `{ text }` object depending on which positional slot the kv landed in.
  */
-const parseTagNames = (tags?: C4Tags): string[] => {
-  const text = typeof tags === 'string' ? tags : (tags?.text ?? '');
+const parseTagNames = (tags?: C4Attribute): string[] => {
+  const text = attributeText(tags) ?? '';
   return text
     .split(/[+,]/)
     .map((tag) => tag.trim())
@@ -254,11 +261,16 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
   for (const shape of db.getC4ShapeArray()) {
     const type = shape.typeC4Shape.text;
     const tagNames = parseTagNames(shape.tags);
+    // A $sprite switches the node to mermaid's icon rendering (icon above the
+    // label); the icon name resolves against icon packs registered with
+    // registerIconPacks.
+    const icon = attributeText(shape.sprite);
     nodes.push({
       id: shape.alias,
       label: buildNodeLabel(shape),
       isGroup: false,
-      shape: getNodeShape(type),
+      shape: icon ? 'iconRounded' : getNodeShape(type),
+      icon,
       parentId: parentIdOf(shape.parentBoundary),
       cssClasses: [
         `c4-shape c4-${type}${isExternal(type) ? ' c4-external' : ''}`,
