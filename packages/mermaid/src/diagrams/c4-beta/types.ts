@@ -34,6 +34,12 @@ export interface C4BetaTagStyle {
   line?: C4LinePattern;
 }
 
+export interface C4BetaLegendItem {
+  label: string;
+  fill?: string;
+  stroke?: string;
+}
+
 export interface C4BetaRelationship {
   sourceId: string;
   targetId: string;
