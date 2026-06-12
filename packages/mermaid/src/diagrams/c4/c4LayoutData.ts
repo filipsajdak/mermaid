@@ -33,7 +33,7 @@ interface C4Shape {
   bgColor?: string;
   fontColor?: string;
   borderColor?: string;
-  link?: string;
+  link?: C4Attribute;
   tags?: C4Attribute;
   sprite?: C4Attribute;
 }
@@ -48,7 +48,7 @@ interface C4Boundary {
   bgColor?: string;
   fontColor?: string;
   borderColor?: string;
-  link?: string;
+  link?: C4Attribute;
   tags?: C4Attribute;
 }
 
@@ -253,7 +253,7 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
         ...tagNames.map(tagCssClass),
       ].join(' '),
       cssStyles: [...elementTagStyles(tagNames), ...elementCssStyles(boundary)],
-      link: boundary.link,
+      link: attributeText(boundary.link),
       look: config.look,
     });
   }
@@ -281,7 +281,7 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
         ...elementTagStyles(tagNames),
         ...elementCssStyles(shape),
       ],
-      link: shape.link,
+      link: attributeText(shape.link),
       look: config.look,
     });
   }

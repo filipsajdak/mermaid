@@ -195,6 +195,22 @@ Person(a, "A", $sprite="logos:aws-lambda")
     });
   });
 
+  it('maps $link on elements and boundaries to the node link', () => {
+    parse(`C4Context
+System_Boundary(b0, "Boundary", $link="https://example.com/boundary") {
+  Person(a, "A", "desc", $tags="v1.0", $link="https://example.com/a")
+}
+Person(b, "B", $link="https://example.com/b")
+Person(c, "C")
+`);
+    const { nodes } = data();
+    expect(nodes.find((n) => n.id === 'b0')?.link).toBe('https://example.com/boundary');
+    expect(nodes.find((n) => n.id === 'a')?.link).toBe('https://example.com/a');
+    // $link parsed into an earlier positional slot is stored as { text }
+    expect(nodes.find((n) => n.id === 'b')?.link).toBe('https://example.com/b');
+    expect(nodes.find((n) => n.id === 'c')?.link).toBeUndefined();
+  });
+
   it('passes the diagram direction to the layout data', () => {
     parse(`C4Context
 direction LR
