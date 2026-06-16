@@ -537,15 +537,15 @@ describe('c4-beta db', () => {
       await populate(exampleDiagram);
       expect(db.getLegendItems()).toEqual([
         { label: 'person', fill: '#08427B', stroke: '#073B6F' },
-        { label: 'system', fill: '#1168BD', stroke: '#3C7FC0' },
-        { label: 'external system', fill: '#999999', stroke: '#8A8A8A' },
+        { label: 'softwareSystem', fill: '#1168BD', stroke: '#3C7FC0' },
+        { label: 'external softwareSystem', fill: '#999999', stroke: '#8A8A8A' },
         { label: 'container', fill: '#438DD5', stroke: '#3C7FC0' },
       ]);
     });
 
     it('should not repeat kinds and should skip groups and nodes', async () => {
       await populate(`c4-beta deployment
-        node aws "AWS" {
+        deploymentNode aws "AWS" {
           container api "API"
           container db "DB"
         }
@@ -560,10 +560,10 @@ describe('c4-beta db', () => {
       await populate(`c4-beta context
         style team-a fill:#1F2937, stroke:#111827
         style async line:dashed, stroke:#0a0
-        system a "A" :::team-a
+        softwareSystem a "A" :::team-a
       `);
       expect(db.getLegendItems()).toEqual([
-        { label: 'system', fill: '#1168BD', stroke: '#3C7FC0' },
+        { label: 'softwareSystem', fill: '#1168BD', stroke: '#3C7FC0' },
         { label: 'team-a', fill: '#1F2937', stroke: '#111827' },
         { label: 'async', fill: undefined, stroke: '#0a0' },
       ]);
