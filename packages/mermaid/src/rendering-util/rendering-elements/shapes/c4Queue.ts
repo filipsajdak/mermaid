@@ -19,8 +19,10 @@ export async function c4Queue<T extends SVGGraphicsElement>(parent: D3Selection<
   const h = Math.max(bbox.height + padding * 2, 40);
   const ry = h / 2;
   // Horizontal cap radius (elliptical ends), proportional to the height.
-  const rx = Math.max(Math.min(h * 0.22, 24), 8);
-  const w = Math.max(bbox.width + padding * 2 + rx * 2, 80);
+  const rx = Math.max(Math.min(h * 0.28, 28), 10);
+  // Extra room on the right so the text clears the right-hand opening/seam.
+  const rightGap = rx * 1.5;
+  const w = Math.max(bbox.width + padding * 2 + rx * 2 + rightGap, 80);
   const left = -w / 2;
   const right = w / 2;
   const top = -h / 2;
@@ -46,11 +48,11 @@ export async function c4Queue<T extends SVGGraphicsElement>(parent: D3Selection<
 
   updateNodeBounds(node, group);
 
-  // Label centred on the origin; the `rx` padding on each side keeps the text
-  // clear of the elliptical caps and the seam.
+  // Shift the label left by half the extra right gap so the text sits in the body,
+  // clear of the right-hand opening/seam (and the elliptical caps).
   label.attr(
     'transform',
-    `translate(${-(bbox.width / 2) - (bbox.x - (bbox.left ?? 0))}, ${-(bbox.height / 2) - (bbox.y - (bbox.top ?? 0))})`
+    `translate(${-(bbox.width / 2) - rightGap / 2 - (bbox.x - (bbox.left ?? 0))}, ${-(bbox.height / 2) - (bbox.y - (bbox.top ?? 0))})`
   );
 
   node.intersect = function (point) {
