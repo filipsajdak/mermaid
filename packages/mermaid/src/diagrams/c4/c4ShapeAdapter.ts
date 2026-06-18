@@ -134,6 +134,18 @@ const buildNodeLabel = (shape: C4ShapeLike): string => {
   return lines.join('<br/>');
 };
 
+/** A C4 relationship label: bold name, then optional `[technology]` and description. */
+export const buildEdgeLabel = (rel: { label: C4Text; techn?: C4Text; descr?: C4Text }): string => {
+  const lines: string[] = [`<b>${escapeHtml(rel.label.text)}</b>`];
+  if (rel.techn?.text) {
+    lines.push(`<small><i>[${escapeHtml(rel.techn.text)}]</i></small>`);
+  }
+  if (rel.descr?.text) {
+    lines.push(`<small>${escapeHtml(rel.descr.text)}</small>`);
+  }
+  return lines.join('<br/>');
+};
+
 // Clamp a palette colour dark enough to read as text/border on a light fill.
 const ensureReadable = (color: string): string => {
   const c = hsl(color);
