@@ -17,11 +17,7 @@ import type { TextDimensionConfig } from '../../types.js';
 import type { C4Boundary, C4DrawConfig, C4Font, C4Rel, C4Shape, C4Text } from './c4Types.js';
 import { shapes } from '../../rendering-util/rendering-elements/shapes.js';
 import { buildC4Node, buildEdgeLabel } from './c4ShapeAdapter.js';
-import {
-  insertEdgeLabel,
-  insertEdge,
-  positionEdgeLabel,
-} from '../../rendering-util/rendering-elements/edges.js';
+import { insertEdgeLabel, insertEdge } from '../../rendering-util/rendering-elements/edges.js';
 import insertMarkers from '../../rendering-util/rendering-elements/markers.js';
 
 type C4DB = typeof c4Db;
@@ -462,6 +458,20 @@ export const drawRels = async function (
       );
     }
 
+    // Honour UpdateRelStyle: $offsetX/$offsetY nudge the label, $textColor/$lineColor recolour it.
+    // The db may store the offsets as strings (named attributes land in the textColor/lineColor
+    // slots, which aren't parseInt'd) or as numbers (positional), so coerce defensively.
+    const toOffset = (value: unknown) => {
+      const n = Number(value);
+      return Number.isNaN(n) ? 0 : n;
+    };
+    const offsetX = toOffset(rel.offsetX);
+    const offsetY = toOffset(rel.offsetY);
+    const lineColor = typeof rel.lineColor === 'string' ? rel.lineColor : undefined;
+    const textColor = typeof rel.textColor === 'string' ? rel.textColor : undefined;
+    const labelX = (points.startPoint.x + points.endPoint.x) / 2 + offsetX;
+    const labelY = (points.startPoint.y + points.endPoint.y) / 2 + offsetY;
+
     const edge = {
       id: `${diagramId}_rel${i}`,
       label: buildEdgeLabel(rel),
@@ -474,20 +484,21 @@ export const drawRels = async function (
       curve: 'linear',
       look,
       points: [points.startPoint, points.endPoint],
-      // Default label position = the midpoint of the line. positionEdgeLabel only
-      // recomputes from the path when insertEdge reports an updated path, so without
-      // this the label falls back to undefined x/y and is stranded at the origin.
-      x: (points.startPoint.x + points.endPoint.x) / 2,
-      y: (points.startPoint.y + points.endPoint.y) / 2,
+      style: lineColor ? [`stroke:${lineColor}`] : undefined,
+      cssStyles: textColor ? [`color:${textColor}`] : undefined,
     };
 
     if (edge.label) {
       await insertEdgeLabel(edgeLabels, edge);
+      // Position the label at the line midpoint + the UpdateRelStyle offset. We set the
+      // transform directly rather than via positionEdgeLabel, which discards edge.x/y (and
+      // so the offset) whenever insertEdge happens to report an updated path.
+      const labelGroup = edgeLabels.node()?.lastElementChild;
+      if (labelGroup) {
+        labelGroup.setAttribute('transform', `translate(${labelX}, ${labelY})`);
+      }
     }
-    const paths = insertEdge(edgePaths, edge, new Map(), 'c4', nodeStub, nodeStub, diagramId, true);
-    if (edge.label) {
-      positionEdgeLabel(edge, paths);
-    }
+    insertEdge(edgePaths, edge, new Map(), 'c4', nodeStub, nodeStub, diagramId, true);
   }
 };
 
