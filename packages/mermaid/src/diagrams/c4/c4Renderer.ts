@@ -429,10 +429,11 @@ export const drawRels = async function (
   const look = getConfig().look ?? 'classic';
 
   // Relationships are drawn through the unified edge renderer: a dashed line with an
-  // arrowhead and an HTML label, matching c4model.com. Edges go under the shapes
-  // (inserted first) with their labels above; the legacy grid still supplies the geometry
-  // (a straight line between the two shapes' boundary intersection points).
-  const edgePaths = diagram.insert('g', ':first-child').attr('class', 'edgePaths');
+  // arrowhead and an HTML label, matching c4model.com. Edges (and their labels) are drawn
+  // ON TOP of the shapes - as the legacy C4 renderer did - so the connection line is never
+  // hidden behind a box. The legacy grid still supplies the geometry (a straight line
+  // between the two shapes' boundary intersection points), which keeps the line in the gaps.
+  const edgePaths = diagram.append('g').attr('class', 'edgePaths');
   const edgeLabels = diagram.append('g').attr('class', 'edgeLabels');
   insertMarkers(diagram, ['point'], 'c4', diagramId);
   // The intersection points are already clipped to the shape boundaries, so insertEdge does

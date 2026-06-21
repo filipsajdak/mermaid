@@ -63,7 +63,7 @@ const getStyles = (options) =>
   }
   .edgeLabel rect {
     fill: ${options.background ?? '#ffffff'};
-    opacity: 0.9;
+    opacity: 1;
   }
 `;
 
