@@ -491,4 +491,56 @@ UpdateElementStyle(s2, $legendText="Shared")
       expect(labels.filter((l) => l === 'Shared')).toHaveLength(1);
     });
   });
+
+  describe('C4Code (Level 4) prototype', () => {
+    it('parses a C4Code diagram and sets the diagram type', () => {
+      parse(`C4Code
+Code(repo, "OrderRepository", "class")
+`);
+      expect(c4Db.getC4Type()).toBe('C4Code');
+    });
+
+    it('renders a Code element as a framed box with the Code stereotype', () => {
+      parse(`C4Code
+Code(svc, "OrderService", "class", "Coordinates order placement")
+`);
+      const node = data().nodes.find((n) => n.id === 'svc');
+      // A framed rectangle (fr-rect) marks it as a code-level box.
+      expect(node).toMatchObject({ isGroup: false, shape: 'fr-rect' });
+      // The element kind (Type, e.g. class/interface/function) reads as the stereotype tech.
+      expect(node?.label).toContain('[Code: class]');
+      expect(node?.label).toContain('OrderService');
+      expect(node?.label).toContain('Coordinates order placement');
+    });
+
+    it('produces an edge between two Code elements', () => {
+      parse(`C4Code
+Code(svc, "OrderService", "class")
+Code(repo, "OrderRepository", "interface")
+Rel(svc, repo, "Loads and saves orders", "JDBC")
+`);
+      const { edges } = data();
+      expect(edges).toHaveLength(1);
+      expect(edges[0]).toMatchObject({ start: 'svc', end: 'repo', arrowTypeEnd: 'arrow_point' });
+      expect(edges[0].label).toContain('Loads and saves orders');
+      expect(edges[0].label).toContain('JDBC');
+    });
+
+    it('gives Code elements their own palette identity color and legend row', () => {
+      parse(`C4Code
+Code(svc, "OrderService", "class")
+`);
+      const node = getData(c4Db, {
+        c4: { code_bg_color: '#0b3d6f' },
+      } as MermaidConfig).nodes.find((n) => n.id === 'svc');
+      // The configured code color becomes the outline (border + text) over a light fill.
+      expect(node?.cssStyles).toEqual(
+        expect.arrayContaining(['fill:#ffffff', 'stroke:#0b3d6f', 'color:#0b3d6f'])
+      );
+      const labels = buildLegendData(c4Db, {
+        c4: { code_bg_color: '#0b3d6f' },
+      } as MermaidConfig).map((i) => i.label);
+      expect(labels).toContain('Code');
+    });
+  });
 });

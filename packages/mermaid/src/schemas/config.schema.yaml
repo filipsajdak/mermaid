@@ -874,6 +874,14 @@ $defs: # JSON Schema definition (maybe we should move these to a separate file)
       external_component_queue_border_color:
         type: string
         default: '#BFBFBF'
+      # Level 4 (Code) elements: lightest step of the C4 blue ramp
+      # (person -> system -> container -> component -> code).
+      code_bg_color:
+        type: string
+        default: '#B0D4F5'
+      code_border_color:
+        type: string
+        default: '#9DC3E6'
 
       # Font Calculators
       # By default, these all return the values from this configuration.

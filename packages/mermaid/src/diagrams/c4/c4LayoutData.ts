@@ -190,6 +190,12 @@ const resolveNodeShape = (
   if (QUEUE_SHAPES.has(typeC4Shape)) {
     return { shape: 'c4-queue' };
   }
+  // Level 4 (Code) elements render as a framed rectangle (`fr-rect`) so a class /
+  // interface / function reads as a distinct "code box", echoing a UML class frame
+  // without the method/attribute compartments. Components stay plain rounded boxes.
+  if (typeC4Shape === 'code') {
+    return { shape: 'fr-rect' };
+  }
   return { shape: 'rounded' };
 };
 
@@ -198,6 +204,8 @@ const STEREOTYPE_NAMES: Record<string, string> = {
   system: 'Software System',
   container: 'Container',
   component: 'Component',
+  // Level 4 (Code) element: a class / interface / function shown as a framed box.
+  code: 'Code',
   infrastructure_node: 'Infrastructure Node',
   // Structurizr deployment instances (rendered as approximated element boxes).
   system_instance: 'Software System Instance',
@@ -508,10 +516,11 @@ const LEGEND_ORDER: Record<string, number> = {
   system: 1,
   container: 2,
   component: 3,
-  database: 4,
-  queue: 5,
-  external: 6,
-  deploymentNode: 7,
+  code: 4,
+  database: 5,
+  queue: 6,
+  external: 7,
+  deploymentNode: 8,
 };
 
 /**

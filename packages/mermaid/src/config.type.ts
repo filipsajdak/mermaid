@@ -1676,6 +1676,8 @@ export interface C4DiagramConfig extends BaseDiagramConfig {
   external_component_db_border_color?: string;
   external_component_queue_bg_color?: string;
   external_component_queue_border_color?: string;
+  code_bg_color?: string;
+  code_border_color?: string;
   personFont?: FontCalculator;
   external_personFont?: FontCalculator;
   systemFont?: FontCalculator;
