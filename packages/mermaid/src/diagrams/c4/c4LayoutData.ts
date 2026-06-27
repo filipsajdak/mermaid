@@ -53,12 +53,29 @@ interface C4Rel {
   descr?: C4Text;
   textColor?: string;
   lineColor?: string;
+  tags?: string;
+}
+
+interface C4ElementTag {
+  tagName: string;
+  bgColor?: string;
+  fontColor?: string;
+  borderColor?: string;
+  shape?: string;
+}
+
+interface C4RelTag {
+  tagName: string;
+  textColor?: string;
+  lineColor?: string;
 }
 
 interface C4Db {
   getC4ShapeArray: (parentBoundary?: string) => C4Shape[];
   getBoundaries: (parentBoundary?: string) => C4Boundary[];
   getRels: () => C4Rel[];
+  getElementTags: () => C4ElementTag[];
+  getRelTags: () => C4RelTag[];
   getC4Type: () => string | undefined;
   getDirection: () => string;
 }
@@ -108,16 +125,19 @@ const keywordShape = (value: string | undefined): ShapeID | undefined =>
 
 /**
  * Resolves the render shape for a C4 element: explicit $shape/$sprite first,
- * then a recognised $tags token, then the element type.
+ * then a $tags token (a defined AddElementTag shape, then a built-in keyword),
+ * then the element type.
  */
-const resolveNodeShape = (shape: C4Shape): ShapeID => {
+const resolveNodeShape = (shape: C4Shape, elementTags: Map<string, C4ElementTag>): ShapeID => {
   const explicit = keywordShape(shape.shape) ?? keywordShape(shape.sprite);
   if (explicit) {
     return explicit;
   }
   if (shape.tags) {
-    for (const tag of shape.tags.split(',')) {
-      const tagged = keywordShape(tag.trim());
+    for (const raw of shape.tags.split(',')) {
+      const tag = raw.trim();
+      const definedShape = keywordShape(elementTags.get(tag)?.shape);
+      const tagged = definedShape ?? keywordShape(tag);
       if (tagged) {
         return tagged;
       }
@@ -206,6 +226,64 @@ const elementCssStyles = (
   return styles;
 };
 
+/**
+ * Fill/border/text styles contributed by an element's `$tags` (comma-separated)
+ * that match a defined `AddElementTag`. Applied after the palette outline and
+ * before per-element `UpdateElementStyle`, so an explicit element style wins.
+ */
+const elementTagStyles = (
+  tags: string | undefined,
+  elementTags: Map<string, C4ElementTag>
+): string[] => {
+  const styles: string[] = [];
+  if (!tags) {
+    return styles;
+  }
+  for (const raw of tags.split(',')) {
+    const tag = elementTags.get(raw.trim());
+    if (!tag) {
+      continue;
+    }
+    if (tag.bgColor) {
+      styles.push(`fill:${tag.bgColor}`);
+    }
+    if (tag.borderColor) {
+      styles.push(`stroke:${tag.borderColor}`);
+    }
+    if (tag.fontColor) {
+      styles.push(`color:${tag.fontColor}`);
+    }
+  }
+  return styles;
+};
+
+/**
+ * Line/text styles contributed by a relationship's `$tags` that match a defined
+ * `AddRelTag`. Applied before per-relationship `UpdateRelStyle` so it wins.
+ */
+const relTagStyles = (
+  tags: string | undefined,
+  relTags: Map<string, C4RelTag>
+): { style: string[]; labelStyle: string[] } => {
+  const style: string[] = [];
+  const labelStyle: string[] = [];
+  if (tags) {
+    for (const raw of tags.split(',')) {
+      const tag = relTags.get(raw.trim());
+      if (!tag) {
+        continue;
+      }
+      if (tag.lineColor) {
+        style.push(`stroke:${tag.lineColor}`);
+      }
+      if (tag.textColor) {
+        labelStyle.push(`color:${tag.textColor}`);
+      }
+    }
+  }
+  return { style, labelStyle };
+};
+
 // Clamp a palette color dark enough to read as text/border on a light fill.
 const ensureReadable = (color: string): string => {
   const c = hsl(color);
@@ -244,6 +322,10 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
   // C4Dynamic numbers each relationship in declaration order (1: ..., 2: ...).
   const isDynamic = db.getC4Type() === 'C4Dynamic';
 
+  // Named styles defined via AddElementTag / AddRelTag, keyed by tag name.
+  const elementTagMap = new Map(db.getElementTags().map((tag) => [tag.tagName, tag]));
+  const relTagMap = new Map(db.getRelTags().map((tag) => [tag.tagName, tag]));
+
   const boundaries = db.getBoundaries().filter((boundary) => boundary.alias !== 'global');
   const boundaryAliases = new Set(boundaries.map((boundary) => boundary.alias));
 
@@ -273,11 +355,15 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
       id: shape.alias,
       label: buildNodeLabel(shape),
       isGroup: false,
-      shape: resolveNodeShape(shape),
+      shape: resolveNodeShape(shape, elementTagMap),
       parentId: parentIdOf(shape.parentBoundary),
       padding: shapePadding,
       cssClasses: `c4-shape c4-${type}${isExternal(type) ? ' c4-external' : ''}`,
-      cssStyles: [...configColorStyles(type, c4Config, background), ...elementCssStyles(shape)],
+      cssStyles: [
+        ...configColorStyles(type, c4Config, background),
+        ...elementTagStyles(shape.tags, elementTagMap),
+        ...elementCssStyles(shape),
+      ],
       link: shape.link,
       look: config.look,
     });
@@ -290,8 +376,9 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
     const labelRel = isDynamic
       ? { ...rel, label: { ...rel.label, text: `${index + 1}: ${rel.label.text}` } }
       : rel;
-    const style: string[] = [];
-    const labelStyle: string[] = [];
+    const { style: tagStyle, labelStyle: tagLabelStyle } = relTagStyles(rel.tags, relTagMap);
+    const style: string[] = [...tagStyle];
+    const labelStyle: string[] = [...tagLabelStyle];
     if (rel.lineColor) {
       style.push(`stroke:${rel.lineColor}`);
     }
