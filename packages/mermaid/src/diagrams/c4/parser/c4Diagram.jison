@@ -101,6 +101,7 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 \s*(\r?\n)+                               return 'NEWLINE';
 \s+                                       /* skip whitespace */
 "C4Context"                               return 'C4_CONTEXT';
+"C4Landscape"                             return 'C4_LANDSCAPE';
 "C4Container"                             return 'C4_CONTAINER';
 "C4Component"                             return 'C4_COMPONENT';
 "C4Dynamic"                               return 'C4_DYNAMIC';
@@ -222,6 +223,7 @@ mermaidDoc
 
 graphConfig
     : C4_CONTEXT NEWLINE statements EOF {yy.setC4Type($1)}
+    | C4_LANDSCAPE NEWLINE statements EOF {yy.setC4Type($1)}
     | C4_CONTAINER NEWLINE statements EOF {yy.setC4Type($1)}
     | C4_COMPONENT NEWLINE statements EOF {yy.setC4Type($1)}
     | C4_DYNAMIC NEWLINE statements EOF {yy.setC4Type($1)}
