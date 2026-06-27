@@ -191,6 +191,7 @@ const STEREOTYPE_NAMES: Record<string, string> = {
   system: 'Software System',
   container: 'Container',
   component: 'Component',
+  infrastructure_node: 'Infrastructure Node',
 };
 
 // Structurizr-style stereotype, e.g. `Software System` for system / system_db / external_system.

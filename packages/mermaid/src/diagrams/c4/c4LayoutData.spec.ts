@@ -269,6 +269,21 @@ Deployment_Node(n1, "AWS", "Cloud") {
     expect(nodes.find((n) => n.id === 'c1')).toMatchObject({ isGroup: false, parentId: 'n1' });
   });
 
+  it('parses an InfrastructureNode inside a Deployment_Node as a rounded box with its stereotype', () => {
+    parse(`C4Deployment
+Deployment_Node(n1, "AWS", "Cloud") {
+  InfrastructureNode(lb, "Load Balancer", "nginx")
+}
+`);
+    const { nodes } = data();
+    const infra = nodes.find((n) => n.id === 'lb');
+    expect(infra).toMatchObject({ isGroup: false, parentId: 'n1', shape: 'rounded' });
+    expect(infra?.label).toContain('Load Balancer');
+    expect(infra?.label).toContain('Infrastructure Node');
+    expect(infra?.label).toContain('nginx');
+    expect(infra?.cssClasses).toContain('c4-infrastructure_node');
+  });
+
   it('emits the db direction into LayoutData (defaults to TB)', () => {
     parse(`C4Context
 Person(a, "A")
