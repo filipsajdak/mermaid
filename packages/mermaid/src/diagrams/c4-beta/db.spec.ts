@@ -88,7 +88,7 @@ describe('c4-beta db', () => {
     expect(element.kind).toBe('softwareSystem');
     const { nodes } = db.getData();
     expect(nodes[0].cssClasses).toBe('c4-shape c4-softwareSystem');
-    expect(nodes[0].label).toContain('&laquo;Software System&raquo;');
+    expect(nodes[0].label).toContain('[Software System]');
   });
 
   it('should keep the deploymentNode kind and render it as a cluster', async () => {
@@ -111,7 +111,7 @@ describe('c4-beta db', () => {
       expect(customer?.cssClasses).toBe('c4-shape c4-person');
       expect(customer?.cssStyles).toEqual([]);
       expect(customer?.label).toBe(
-        '<small>&laquo;Person&raquo;</small><br/><b>Personal Banking Customer</b><br/>A customer of the bank.'
+        '<b>Personal Banking Customer</b><br/><span class="c4-type">[Person]</span><br/><span class="c4-descr">A customer of the bank.</span>'
       );
     });
 
@@ -120,7 +120,7 @@ describe('c4-beta db', () => {
       const { nodes } = db.getData();
       const spa = nodes.find((n) => n.id === 'spa');
       expect(spa?.label).toBe(
-        '<small>&laquo;Container&raquo;</small><br/><b>Single-Page App</b><br/><small><i>[JavaScript/Angular]</i></small><br/>Web UI'
+        '<b>Single-Page App</b><br/><span class="c4-type">[Container: JavaScript/Angular]</span><br/><span class="c4-descr">Web UI</span>'
       );
       expect(spa?.parentId).toBe('big');
     });
@@ -224,7 +224,9 @@ describe('c4-beta db', () => {
         await populate(`c4-beta context\nperson x "Name" "Desc" "Tech"\n`);
         const { nodes } = db.getData();
         expect(nodes[0].label).not.toContain('Tech');
-        expect(nodes[0].label).toBe('<small>&laquo;Person&raquo;</small><br/><b>Name</b><br/>Desc');
+        expect(nodes[0].label).toBe(
+          '<b>Name</b><br/><span class="c4-type">[Person]</span><br/><span class="c4-descr">Desc</span>'
+        );
         expect(warnSpy).toHaveBeenCalledOnce();
         warnSpy.mockRestore();
       });
@@ -241,7 +243,7 @@ describe('c4-beta db', () => {
       it('should keep technology on a container', async () => {
         await populate(`c4-beta container\ncontainer z "Name" "Desc" "Tech"\n`);
         const { nodes } = db.getData();
-        expect(nodes[0].label).toContain('[Tech]');
+        expect(nodes[0].label).toContain('[Container: Tech]');
       });
     });
 
@@ -417,7 +419,7 @@ describe('c4-beta db', () => {
         const { nodes } = db.getData();
         expect(nodes[0].isGroup).toBe(false);
         expect(nodes[0].cssClasses).toBe('c4-shape c4-infrastructureNode');
-        expect(nodes[0].label).toContain('&laquo;Infrastructure Node&raquo;');
+        expect(nodes[0].label).toContain('[Infrastructure Node: nginx]');
         // Outline style: colours come from the .c4-infrastructureNode class rule, not inline.
         expect(nodes[0].cssStyles).toEqual([]);
       });

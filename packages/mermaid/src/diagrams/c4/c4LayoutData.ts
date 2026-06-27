@@ -9,6 +9,11 @@ import {
   keywordShape,
   type ResolvedShape,
 } from './c4ShapeVocabulary.js';
+import {
+  buildBoundaryLabel as buildSharedBoundaryLabel,
+  buildElementLabel,
+  buildRelationshipLabel,
+} from './c4Labels.js';
 
 /**
  * Adapter that converts the legacy C4 db state (c4ShapeArray / boundaries / rels)
@@ -180,49 +185,24 @@ const isExternal = (typeC4Shape: string): boolean => typeC4Shape.startsWith('ext
 const hasShadow = (shadowing: string | undefined): boolean =>
   shadowing !== undefined && shadowing !== '' && shadowing !== 'false';
 
-const escapeHtml = (txt: string): string =>
-  txt.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+const buildNodeLabel = (shape: C4Shape): string =>
+  buildElementLabel({
+    name: shape.label.text,
+    stereotype: stereotypeLabel(shape.typeC4Shape.text),
+    technology: shape.techn?.text,
+    description: shape.descr?.text,
+    instances: typeof shape.instances === 'string' ? shape.instances : shape.instances?.text,
+  });
 
-const buildNodeLabel = (shape: C4Shape): string => {
-  const stereotype = stereotypeLabel(shape.typeC4Shape.text);
-  const type = shape.techn?.text
-    ? `[${escapeHtml(stereotype)}: ${escapeHtml(shape.techn.text)}]`
-    : `[${escapeHtml(stereotype)}]`;
-  const lines: string[] = [
-    `<b>${escapeHtml(shape.label.text)}</b>`,
-    `<span class="c4-type">${type}</span>`,
-  ];
-  if (shape.descr?.text) {
-    lines.push(`<span class="c4-descr">${escapeHtml(shape.descr.text)}</span>`);
-  }
-  // Deployment instance count (e.g. `$instances="3"`) shown as a small annotation.
-  const instances = typeof shape.instances === 'string' ? shape.instances : shape.instances?.text;
-  if (instances) {
-    lines.push(`<span class="c4-instances">(x${escapeHtml(instances)})</span>`);
-  }
-  return lines.join('<br/>');
-};
+const buildBoundaryLabel = (boundary: C4Boundary): string =>
+  buildSharedBoundaryLabel({ label: boundary.label.text, type: boundary.type?.text });
 
-const buildBoundaryLabel = (boundary: C4Boundary): string => {
-  const lines: string[] = [`<b>${escapeHtml(boundary.label.text)}</b>`];
-  const type = boundary.type?.text;
-  const implicit = type?.toLowerCase();
-  if (type && implicit !== 'system' && implicit !== 'container') {
-    lines.push(`<span class="c4-type">[${escapeHtml(type)}]</span>`);
-  }
-  return lines.join('<br/>');
-};
-
-const buildEdgeLabel = (rel: C4Rel): string => {
-  const lines: string[] = [`<b>${escapeHtml(rel.label.text)}</b>`];
-  if (rel.techn?.text) {
-    lines.push(`<small><i>[${escapeHtml(rel.techn.text)}]</i></small>`);
-  }
-  if (rel.descr?.text) {
-    lines.push(`<small>${escapeHtml(rel.descr.text)}</small>`);
-  }
-  return lines.join('<br/>');
-};
+const buildEdgeLabel = (rel: C4Rel): string =>
+  buildRelationshipLabel({
+    label: rel.label.text,
+    technology: rel.techn?.text,
+    description: rel.descr?.text,
+  });
 
 const elementCssStyles = (
   element: Pick<C4Shape, 'bgColor' | 'fontColor' | 'borderColor'>

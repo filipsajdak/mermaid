@@ -3,6 +3,7 @@ import type { DiagramDB } from '../../diagram-api/types.js';
 import { log } from '../../logger.js';
 import type { Edge, LayoutData, Node } from '../../rendering-util/types.js';
 import { keywordShape } from '../c4/c4ShapeVocabulary.js';
+import { buildElementLabel as buildSharedElementLabel, escapeHtml } from '../c4/c4Labels.js';
 import {
   clear as commonClear,
   getAccDescription,
@@ -63,23 +64,15 @@ const LINE_PATTERNS = new Set<string>(['solid', 'dashed', 'dotted']);
 
 const isLinePattern = (value: string): value is C4LinePattern => LINE_PATTERNS.has(value);
 
-const escapeHtml = (text: string): string =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-const buildElementLabel = (element: C4BetaElement): string => {
-  const displayName = ELEMENT_DISPLAY_NAMES[element.kind] ?? element.kind;
-  const lines: string[] = [
-    `<small>&laquo;${escapeHtml(displayName)}&raquo;</small>`,
-    `<b>${escapeHtml(element.name)}</b>`,
-  ];
-  if (element.technology) {
-    lines.push(`<small><i>[${escapeHtml(element.technology)}]</i></small>`);
-  }
-  if (element.description) {
-    lines.push(escapeHtml(element.description));
-  }
-  return lines.join('<br/>');
-};
+// The element label uses the shared C4 builder so c4-beta and legacy C4 render the
+// same `<b>Name</b>` / `[Stereotype: tech]` / description markup (one visual language).
+const buildElementLabel = (element: C4BetaElement): string =>
+  buildSharedElementLabel({
+    name: element.name,
+    stereotype: ELEMENT_DISPLAY_NAMES[element.kind] ?? element.kind,
+    technology: element.technology,
+    description: element.description,
+  });
 
 const buildRelationshipLabel = (
   relationship: C4BetaRelationship,
