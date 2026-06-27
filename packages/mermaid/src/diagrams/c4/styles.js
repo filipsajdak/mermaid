@@ -137,6 +137,19 @@ const getStyles = (options) =>
     fill: ${options.textColor};
     font-family: ${options.fontFamily};
   }
+
+  /* Auto-generated legend (RFC #7844): swatches in the element identity colour
+     over a white fill, with a matching label, mirroring the outline style. */
+  .c4-legend {
+    font-family: ${options.fontFamily};
+    font-size: 0.85em;
+  }
+  .c4-legend .c4-legend-swatch {
+    stroke-width: 2px;
+  }
+  .c4-legend .c4-legend-label {
+    dominant-baseline: middle;
+  }
 `;
 
 export default getStyles;

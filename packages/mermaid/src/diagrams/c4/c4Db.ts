@@ -63,6 +63,7 @@ let c4ShapeInRow = 4;
 let c4BoundaryInRow = 2;
 let c4Type: string | undefined;
 let direction = 'TB';
+let showLegend = false;
 
 export const getC4Type = function () {
   return c4Type;
@@ -74,6 +75,14 @@ export const setDirection = function (dir: string) {
 
 export const getDirection = function () {
   return direction;
+};
+
+export const setShowLegend = function (showLegendParam: boolean) {
+  showLegend = showLegendParam;
+};
+
+export const getShowLegend = function () {
+  return showLegend;
 };
 
 export const setC4Type = function (c4TypeParam: string) {
@@ -810,6 +819,7 @@ export const clear = function () {
   c4ShapeInRow = 4;
   c4BoundaryInRow = 2;
   direction = 'TB';
+  showLegend = false;
 };
 
 export const LINETYPE = {
@@ -884,6 +894,8 @@ export default {
   getC4Type,
   setDirection,
   getDirection,
+  setShowLegend,
+  getShowLegend,
   getC4ShapeInRow,
   getC4BoundaryInRow,
   setAccTitle,
