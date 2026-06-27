@@ -1,7 +1,14 @@
 import { hsl } from 'd3';
 import type { MermaidConfig } from '../../config.type.js';
-import type { ShapeID } from '../../rendering-util/rendering-elements/shapes.js';
 import type { Edge, LayoutData, Node } from '../../rendering-util/types.js';
+import {
+  DB_SHAPES,
+  QUEUE_SHAPES,
+  ICON_SHAPE,
+  iconName,
+  keywordShape,
+  type ResolvedShape,
+} from './c4ShapeVocabulary.js';
 
 /**
  * Adapter that converts the legacy C4 db state (c4ShapeArray / boundaries / rels)
@@ -86,67 +93,6 @@ interface C4Db {
   getRelTags: () => C4RelTag[];
   getC4Type: () => string | undefined;
   getDirection: () => string;
-}
-
-const QUEUE_SHAPES = new Set([
-  'system_queue',
-  'external_system_queue',
-  'container_queue',
-  'external_container_queue',
-  'component_queue',
-  'external_component_queue',
-]);
-
-const DB_SHAPES = new Set([
-  'system_db',
-  'external_system_db',
-  'container_db',
-  'external_container_db',
-  'component_db',
-  'external_component_db',
-]);
-
-// Structurizr-style shape keywords accepted via $shape, $sprite or $tags.
-const SHAPE_KEYWORDS: Record<string, ShapeID> = {
-  person: 'c4-person',
-  box: 'rounded',
-  rounded: 'rounded',
-  folder: 'c4-folder',
-  directory: 'c4-folder',
-  cylinder: 'c4-database',
-  database: 'c4-database',
-  db: 'c4-database',
-  queue: 'c4-queue',
-  pipe: 'c4-queue',
-  bucket: 'c4-bucket',
-  blob: 'c4-bucket',
-  s3: 'c4-bucket',
-  terminal: 'c4-terminal',
-  console: 'c4-terminal',
-  browser: 'c4-browser',
-  spa: 'c4-browser',
-  component: 'fr-rect',
-};
-
-const keywordShape = (value: string | undefined): ShapeID | undefined =>
-  value ? SHAPE_KEYWORDS[value.toLowerCase()] : undefined;
-
-// The unified renderer's icon shape (reads node.icon and resolves it against the
-// icon packs the user registered via registerIconPacks). Used when a $sprite or
-// $shape is not a built-in keyword but an icon name (e.g. "logos:aws-lambda").
-const ICON_SHAPE: ShapeID = 'iconRounded';
-
-// A non-empty $shape/$sprite that is NOT a recognised keyword is treated as an
-// icon name; returns the trimmed name, or undefined when empty / keyword.
-const iconName = (value: string | undefined): string | undefined => {
-  const trimmed = value?.trim();
-  return trimmed && !keywordShape(trimmed) ? trimmed : undefined;
-};
-
-/** The render shape for a C4 element, plus an optional icon name for the icon shape. */
-interface ResolvedShape {
-  shape: ShapeID;
-  icon?: string;
 }
 
 /**

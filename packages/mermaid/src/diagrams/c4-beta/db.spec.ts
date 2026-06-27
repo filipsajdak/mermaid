@@ -256,13 +256,14 @@ describe('c4-beta db', () => {
         expect(nodes[0].cssStyles).toEqual(['fill: #1F2937', 'stroke: #111827', 'color: #fff']);
       });
 
-      it('should map shape:cylinder to the cylinder shape', async () => {
+      it('should map shape:cylinder to the shared c4-database shape', async () => {
         await populate(`c4-beta container
           style database shape:cylinder
           container db "Database" :::database
         `);
         const { nodes } = db.getData();
-        expect(nodes[0].shape).toBe('cylinder');
+        // Resolved through the shared C4 shape vocabulary, matching legacy C4.
+        expect(nodes[0].shape).toBe('c4-database');
       });
 
       it('should apply tag styles and line pattern to relationships', async () => {

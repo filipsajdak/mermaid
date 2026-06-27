@@ -2,6 +2,7 @@ import { getConfig } from '../../config.js';
 import type { DiagramDB } from '../../diagram-api/types.js';
 import { log } from '../../logger.js';
 import type { Edge, LayoutData, Node } from '../../rendering-util/types.js';
+import { keywordShape } from '../c4/c4ShapeVocabulary.js';
 import {
   clear as commonClear,
   getAccDescription,
@@ -310,7 +311,9 @@ export class C4BetaDB implements DiagramDB {
           }
         }
         if (style.shape) {
-          shape = style.shape;
+          // Resolve the keyword through the shared C4 shape vocabulary so c4-beta
+          // and legacy C4 render the same shape (e.g. cylinder -> the c4-database shape).
+          shape = keywordShape(style.shape) ?? style.shape;
         }
       }
       nodes.push({
