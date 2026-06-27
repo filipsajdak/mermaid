@@ -168,10 +168,23 @@ Deployment_Node(n1, "AWS", "Cloud") {
 Person(a, "A")
 `);
     expect(data().direction).toBe('TB');
-    // The grammar does not yet accept `direction` as a top-level statement (a
-    // Wave-B slice wires that up); getData reads whatever the db holds.
-    c4Db.setDirection('LR');
+  });
+
+  it('honours a top-level `direction` statement parsed from the diagram', () => {
+    parse(`C4Context
+direction LR
+Person(a, "A")
+`);
     expect(data().direction).toBe('LR');
+  });
+
+  it.each(['TB', 'BT', 'LR', 'RL'])('parses `direction %s` and emits it into LayoutData', (dir) => {
+    parse(`C4Context
+direction ${dir}
+Person(a, "A")
+System(b, "B")
+`);
+    expect(data().direction).toBe(dir);
   });
 
   it('prefixes relationship labels with a 1-based step number in C4Dynamic diagrams', () => {
