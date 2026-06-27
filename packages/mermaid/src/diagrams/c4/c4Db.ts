@@ -60,9 +60,18 @@ let wrapEnabled: boolean | undefined = false;
 let c4ShapeInRow = 4;
 let c4BoundaryInRow = 2;
 let c4Type: string | undefined;
+let direction = 'TB';
 
 export const getC4Type = function () {
   return c4Type;
+};
+
+export const setDirection = function (dir: string) {
+  direction = dir;
+};
+
+export const getDirection = function () {
+  return direction;
 };
 
 export const setC4Type = function (c4TypeParam: string) {
@@ -728,6 +737,7 @@ export const clear = function () {
   wrapEnabled = false;
   c4ShapeInRow = 4;
   c4BoundaryInRow = 2;
+  direction = 'TB';
 };
 
 export const LINETYPE = {
@@ -796,6 +806,8 @@ export default {
   getRels,
   getTitle,
   getC4Type,
+  setDirection,
+  getDirection,
   getC4ShapeInRow,
   getC4BoundaryInRow,
   setAccTitle,
