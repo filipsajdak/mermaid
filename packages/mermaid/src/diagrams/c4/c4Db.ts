@@ -597,6 +597,44 @@ export const updateElStyle = function (
   }
 };
 
+//alias, ?bgColor, ?fontColor, ?borderColor
+export const updateBoundaryStyle = function (
+  typeC4BoundaryStyle: string,
+  alias: string,
+  bgColor?: ParserAttribute | null,
+  fontColor?: ParserAttribute | null,
+  borderColor?: ParserAttribute | null
+) {
+  const old = boundaries.find((boundary) => boundary.alias === alias);
+  if (old === undefined) {
+    return;
+  }
+  if (bgColor !== undefined && bgColor !== null) {
+    if (typeof bgColor === 'object') {
+      const [key, value] = Object.entries(bgColor)[0];
+      old[key] = value;
+    } else {
+      old.bgColor = bgColor;
+    }
+  }
+  if (fontColor !== undefined && fontColor !== null) {
+    if (typeof fontColor === 'object') {
+      const [key, value] = Object.entries(fontColor)[0];
+      old[key] = value;
+    } else {
+      old.fontColor = fontColor;
+    }
+  }
+  if (borderColor !== undefined && borderColor !== null) {
+    if (typeof borderColor === 'object') {
+      const [key, value] = Object.entries(borderColor)[0];
+      old[key] = value;
+    } else {
+      old.borderColor = borderColor;
+    }
+  }
+};
+
 //textColor, lineColor, ?offsetX, ?offsetY
 export const updateRelStyle = function (
   typeC4Shape: string,
@@ -878,6 +916,7 @@ export default {
   getElementTags,
   getRelTags,
   updateElStyle,
+  updateBoundaryStyle,
   updateRelStyle,
   updateLayoutConfig,
   autoWrap,

@@ -155,6 +155,7 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "RelIndex"                                { this.begin("rel_index"); return 'REL_INDEX';}
 
 "UpdateElementStyle"                      { this.begin("update_el_style"); return 'UPDATE_EL_STYLE';}
+"UpdateBoundaryStyle"                     { this.begin("update_el_style"); return 'UPDATE_BOUNDARY_STYLE';}
 "UpdateRelStyle"                          { this.begin("update_rel_style"); return 'UPDATE_REL_STYLE';}
 "AddElementTag"                           { this.begin("update_el_style"); return 'ADD_ELEMENT_TAG';}
 "AddRelTag"                               { this.begin("update_rel_style"); return 'ADD_REL_TAG';}
@@ -309,6 +310,7 @@ diagramStatement
     | REL_B attributes {yy.addRel('rel_b', ...$2); $$=$2;}
     | REL_INDEX attributes {$2.splice(0, 1); yy.addRel('rel', ...$2); $$=$2;}
     | UPDATE_EL_STYLE attributes {yy.updateElStyle('update_el_style', ...$2); $$=$2;}
+    | UPDATE_BOUNDARY_STYLE attributes {yy.updateBoundaryStyle('update_boundary_style', ...$2); $$=$2;}
     | UPDATE_REL_STYLE attributes {yy.updateRelStyle('update_rel_style', ...$2); $$=$2;}
     | ADD_ELEMENT_TAG attributes {yy.addElementTag(...$2); $$=$2;}
     | ADD_REL_TAG attributes {yy.addRelTag(...$2); $$=$2;}

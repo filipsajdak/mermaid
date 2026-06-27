@@ -107,6 +107,19 @@ UpdateElementStyle(b, $shadowing="false")
     expect(nodes.find((n) => n.id === 'b')?.cssClasses).not.toContain('c4-shadow');
   });
 
+  it('applies UpdateBoundaryStyle colors to a boundary node', () => {
+    parse(`C4Context
+Enterprise_Boundary(b0, "Bank") {
+  System(s, "S")
+}
+UpdateBoundaryStyle(b0, $bgColor="#445566", $fontColor="#ffffff", $borderColor="#000000")
+`);
+    const { nodes } = data();
+    expect(nodes.find((n) => n.id === 'b0')?.cssStyles).toEqual(
+      expect.arrayContaining(['fill:#445566', 'stroke:#000000', 'color:#ffffff'])
+    );
+  });
+
   it('applies the configured C4 palette as an outline (border + text) over a light fill', () => {
     parse(`C4Context
 Person(a, "A")
