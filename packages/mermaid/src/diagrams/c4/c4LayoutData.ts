@@ -374,13 +374,12 @@ const configColorStyles = (
   c4Config: Record<string, any>,
   background: string
 ): string[] => {
-  const styles: string[] = [`fill:${background}`];
-  const bg = c4Config[`${paletteKey(typeC4Shape)}_bg_color`];
-  if (typeof bg === 'string') {
-    const identity = ensureReadable(bg);
-    styles.push(`stroke:${identity}`, `color:${identity}`);
-  }
-  return styles;
+  // White fill with the element's identity colour as border + text. A type without a
+  // configured `<type>_bg_color` (e.g. InfrastructureNode) falls back to the neutral
+  // DEFAULT_IDENTITY grey - matching its legend swatch - rather than inheriting the
+  // theme's default node border.
+  const identity = identityColor(typeC4Shape, c4Config);
+  return [`fill:${background}`, `stroke:${identity}`, `color:${identity}`];
 };
 
 export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
