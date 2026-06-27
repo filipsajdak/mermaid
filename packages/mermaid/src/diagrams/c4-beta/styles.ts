@@ -55,57 +55,82 @@ const getStyles = (options: C4BetaStyleOptions) =>
     stroke-width: ${options.strokeWidth ?? 1}px;
   }
 
-  /* Default per-kind colors, driven by the theme. Tag styles emitted by the
-   * db as inline styles still win over these class-based rules. */
+  /* C4 OUTLINE language: every element keeps the themed background fill from the
+   * .node rect rule above; each kind only contributes an identity-coloured border.
+   * The matching identity colour is reused for the label text below. Tag styles
+   * emitted by the db as inline styles still win over these class-based rules. */
   .c4-person rect,
   .c4-person path,
   .c4-person circle {
-    fill: ${options.c4PersonBkg};
-    stroke: ${options.c4PersonBorder};
+    stroke: ${options.c4PersonBkg};
   }
   .c4-softwareSystem rect,
   .c4-softwareSystem path,
   .c4-softwareSystem circle {
-    fill: ${options.c4SystemBkg};
-    stroke: ${options.c4SystemBorder};
+    stroke: ${options.c4SystemBkg};
   }
   .c4-container rect,
   .c4-container path,
   .c4-container circle {
-    fill: ${options.c4ContainerBkg};
-    stroke: ${options.c4ContainerBorder};
+    stroke: ${options.c4ContainerBkg};
   }
   .c4-component rect,
   .c4-component path,
   .c4-component circle {
-    fill: ${options.c4ComponentBkg};
-    stroke: ${options.c4ComponentBorder};
+    stroke: ${options.c4ComponentBkg};
+  }
+  .c4-infrastructureNode rect,
+  .c4-infrastructureNode path,
+  .c4-infrastructureNode circle {
+    stroke: #6b6b6b;
   }
   /* Last so it wins over the kind rules for external elements. */
   .c4-external rect,
   .c4-external path,
   .c4-external circle {
-    fill: ${options.c4ExternalBkg};
-    stroke: ${options.c4ExternalBorder};
+    stroke: ${options.c4ExternalBkg};
   }
 
-  .c4-shape .label {
-    color: ${options.c4TextColor};
+  /* Identity-coloured label text, matching each element's outline border. */
+  .c4-person .label,
+  .c4-person .label text,
+  .c4-person .label span {
+    fill: ${options.c4PersonBkg};
+    color: ${options.c4PersonBkg};
   }
-  .c4-shape .label text,
-  .c4-shape .label span {
-    fill: ${options.c4TextColor};
-    color: ${options.c4TextColor};
+  .c4-softwareSystem .label,
+  .c4-softwareSystem .label text,
+  .c4-softwareSystem .label span {
+    fill: ${options.c4SystemBkg};
+    color: ${options.c4SystemBkg};
+  }
+  .c4-container .label,
+  .c4-container .label text,
+  .c4-container .label span {
+    fill: ${options.c4ContainerBkg};
+    color: ${options.c4ContainerBkg};
+  }
+  .c4-component .label,
+  .c4-component .label text,
+  .c4-component .label span {
+    fill: ${options.c4ComponentBkg};
+    color: ${options.c4ComponentBkg};
+  }
+  .c4-infrastructureNode .label,
+  .c4-infrastructureNode .label text,
+  .c4-infrastructureNode .label span {
+    fill: #6b6b6b;
+    color: #6b6b6b;
+  }
+  /* Last so it wins over the kind rules for external elements. */
+  .c4-external .label,
+  .c4-external .label text,
+  .c4-external .label span {
+    fill: ${options.c4ExternalBkg};
+    color: ${options.c4ExternalBkg};
   }
   .c4-shape .label small {
     font-size: 0.75em;
-  }
-
-  .c4-external rect,
-  .c4-external path,
-  .c4-external circle {
-    fill: #999999;
-    stroke: #8A8A8A;
   }
 
   path.c4-rel {

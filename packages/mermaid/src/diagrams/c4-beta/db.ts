@@ -22,16 +22,21 @@ import type {
   C4LinePattern,
 } from './types.js';
 
-interface ElementColors {
-  fill: string;
-  stroke: string;
-}
-
-// infrastructureNode keeps an inline grey: it is not part of the themed C4 element
-// palette. All other element colours come from theme-driven class rules in styles.ts.
-const ELEMENT_COLORS: Partial<Record<C4ElementKind, ElementColors>> = {
-  infrastructureNode: { fill: '#8b8b8b', stroke: '#6b6b6b' },
+// Identity colour per element kind: the C4 OUTLINE border + label colour applied
+// through the theme-driven class rules in styles.ts, reused here for the legend
+// swatch. These match the default-theme c4*Bkg values so the legend stays in sync
+// with the rendered elements.
+const ELEMENT_IDENTITY: Partial<Record<C4ElementKind, string>> = {
+  person: '#08427B',
+  softwareSystem: '#1168BD',
+  container: '#438DD5',
+  component: '#85BBF0',
+  infrastructureNode: '#6b6b6b',
 };
+
+// `external` is a convention tag rather than a kind; it gets the shared grey
+// identity, matching the .c4-external rule in styles.ts.
+const EXTERNAL_IDENTITY = '#999999';
 
 // Human-readable C4 type names rendered as the element stereotype label.
 // `group` has no stereotype: it is a plain boundary, not a C4 type.
@@ -108,14 +113,12 @@ export const buildLegendItems = (
   const items: C4BetaLegendItem[] = [];
   const seenLabels = new Set<string>();
   for (const element of elements) {
-    // Groups and deployment nodes render as unfilled boundaries; they
-    // carry no palette, so they are left out of the legend. `external` is a
-    // convention tag; external elements get the grey palette in the legend.
+    // Groups and deployment nodes render as unfilled boundaries; they carry no
+    // identity colour, so they are left out of the legend. `external` is a
+    // convention tag; external elements get the shared grey identity.
     const isExternal = element.tags.includes('external');
-    const colors = isExternal
-      ? { fill: '#999999', stroke: '#8A8A8A' }
-      : ELEMENT_COLORS[element.kind];
-    if (!colors) {
+    const identity = isExternal ? EXTERNAL_IDENTITY : ELEMENT_IDENTITY[element.kind];
+    if (!identity) {
       continue;
     }
     const label = isExternal ? `external ${element.kind}` : element.kind;
@@ -123,7 +126,9 @@ export const buildLegendItems = (
       continue;
     }
     seenLabels.add(label);
-    items.push({ label, fill: colors.fill, stroke: colors.stroke });
+    // Outline swatch: identity colour on the border, no fill, matching the
+    // white-box-with-coloured-outline elements.
+    items.push({ label, stroke: identity });
   }
   for (const [tag, style] of styles) {
     items.push({ label: tag, fill: style.fill, stroke: style.stroke ?? style.fill });
@@ -280,18 +285,16 @@ export class C4BetaDB implements DiagramDB {
         continue;
       }
       // `external` is a built-in convention tag: it adds the `c4-external` class
-      // (themed grey comes from CSS, not inline styles) instead of the kind color.
+      // so the outline grey from CSS wins over the per-kind identity colour.
       const isExternal = element.tags.includes('external');
-      const colors = isExternal ? undefined : ELEMENT_COLORS[element.kind];
       const cssClasses = ['c4-shape', `c4-${element.kind}`];
       if (isExternal) {
         cssClasses.push('c4-external');
       }
-      // Themed per-kind colors come from class rules in styles.ts; infrastructureNode
-      // keeps its inline grey, and tag styles are emitted inline so they win.
-      const cssStyles: string[] = colors
-        ? [`fill: ${colors.fill}`, `stroke: ${colors.stroke}`]
-        : [];
+      // Element colours (white/background fill with an identity-coloured outline
+      // and text) all come from the themed class rules in styles.ts. Only tag
+      // styles are emitted inline, so they win over the class-based defaults.
+      const cssStyles: string[] = [];
       let shape: Node['shape'] = element.kind === 'person' ? 'c4-person' : 'rect';
       // Tag styles are emitted inline so they override the themed class colors.
       // A user `style external fill:#...` therefore beats the default `.c4-external` rule.

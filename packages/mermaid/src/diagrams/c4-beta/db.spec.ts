@@ -417,7 +417,8 @@ describe('c4-beta db', () => {
         expect(nodes[0].isGroup).toBe(false);
         expect(nodes[0].cssClasses).toBe('c4-shape c4-infrastructureNode');
         expect(nodes[0].label).toContain('&laquo;Infrastructure Node&raquo;');
-        expect(nodes[0].cssStyles).toEqual(['fill: #8b8b8b', 'stroke: #6b6b6b']);
+        // Outline style: colours come from the .c4-infrastructureNode class rule, not inline.
+        expect(nodes[0].cssStyles).toEqual([]);
       });
 
       it('should render an instance count badge on a deployment node', async () => {
@@ -533,13 +534,15 @@ describe('c4-beta db', () => {
       expect(db.isLegendEnabled()).toBe(false);
     });
 
-    it('should derive one entry per element kind used, with effective colors', async () => {
+    it('should derive one outline entry per element kind used', async () => {
       await populate(exampleDiagram);
+      // Outline swatches carry only the identity colour on the stroke (no fill),
+      // matching the white-box-with-coloured-outline elements.
       expect(db.getLegendItems()).toEqual([
-        { label: 'person', fill: '#08427B', stroke: '#073B6F' },
-        { label: 'softwareSystem', fill: '#1168BD', stroke: '#3C7FC0' },
-        { label: 'external softwareSystem', fill: '#999999', stroke: '#8A8A8A' },
-        { label: 'container', fill: '#438DD5', stroke: '#3C7FC0' },
+        { label: 'person', stroke: '#08427B' },
+        { label: 'softwareSystem', stroke: '#1168BD' },
+        { label: 'external softwareSystem', stroke: '#999999' },
+        { label: 'container', stroke: '#438DD5' },
       ]);
     });
 
@@ -551,9 +554,7 @@ describe('c4-beta db', () => {
         }
         group team "Team"
       `);
-      expect(db.getLegendItems()).toEqual([
-        { label: 'container', fill: '#438DD5', stroke: '#3C7FC0' },
-      ]);
+      expect(db.getLegendItems()).toEqual([{ label: 'container', stroke: '#438DD5' }]);
     });
 
     it('should add one entry per user-defined style tag', async () => {
@@ -563,7 +564,7 @@ describe('c4-beta db', () => {
         softwareSystem a "A" :::team-a
       `);
       expect(db.getLegendItems()).toEqual([
-        { label: 'softwareSystem', fill: '#1168BD', stroke: '#3C7FC0' },
+        { label: 'softwareSystem', stroke: '#1168BD' },
         { label: 'team-a', fill: '#1F2937', stroke: '#111827' },
         { label: 'async', fill: undefined, stroke: '#0a0' },
       ]);

@@ -59,10 +59,10 @@ describe('c4-beta styles', () => {
     expect(css).toContain('#444444');
     expect(css).toContain('#666666');
     expect(css).toContain('.c4-person rect');
+    // Outline style: identity colour drives the border + text (no solid fill).
     expect(css).toContain('#08427B');
     expect(css).toContain('#999999');
     expect(css).toContain('#777777');
-    expect(css).toContain('#fefefe');
   });
 });
 
@@ -191,7 +191,8 @@ config:
 ${text}`
       );
       // Outline style: the identity colour drives the element border (stroke), not the fill.
-      const personStroke = (svg: string) => /\.c4-person rect[^{}]*stroke:([^;}]+)/.exec(svg)?.[1];
+      const personStroke = (svg: string) =>
+        /\.c4-person rect[^{}]*{\s*stroke:([^;}]+)/.exec(svg)?.[1];
       expect(personStroke(defaultSvg)).toBe('#08427B');
       expect(personStroke(darkSvg)).toBeDefined();
       expect(personStroke(darkSvg)).not.toBe(personStroke(defaultSvg));
