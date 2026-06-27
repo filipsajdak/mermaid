@@ -216,6 +216,17 @@ const ensureReadable = (color: string): string => {
   return c.formatHex();
 };
 
+// Neutral identity color used when a kind has no palette entry (e.g. deployment
+// nodes) or its `<type>_bg_color` is unset.
+const DEFAULT_IDENTITY = '#6b6b6b';
+
+// Outline identity color for an element type: the readable palette color used as
+// border + text. Mirrors configColorStyles' stroke/text choice.
+const identityColor = (typeC4Shape: string, c4Config: Record<string, any>): string => {
+  const bg = c4Config[`${typeC4Shape}_bg_color`];
+  return typeof bg === 'string' ? ensureReadable(bg) : DEFAULT_IDENTITY;
+};
+
 /**
  * Outline styling for an element type: the c4 palette color becomes the border
  * and text (the element's identity), over a light fill, as on c4model.com.
@@ -322,4 +333,75 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
     config,
     direction: db.getDirection(),
   };
+};
+
+/** One auto-generated legend row: a display label and its outline color. */
+export interface C4LegendItem {
+  label: string;
+  color: string;
+}
+
+// Stable display order for the legend categories (RFC #7844 key).
+const LEGEND_ORDER: Record<string, number> = {
+  person: 0,
+  system: 1,
+  container: 2,
+  component: 3,
+  database: 4,
+  queue: 5,
+  external: 6,
+  deploymentNode: 7,
+};
+
+/**
+ * Collapses an element type to its legend category. External elements share the
+ * grey "External" row, database/queue variants share their shape rows, and the
+ * remaining types keep their Structurizr stereotype name.
+ */
+const legendCategory = (typeC4Shape: string): { key: string; label: string } => {
+  if (DB_SHAPES.has(typeC4Shape)) {
+    return { key: 'database', label: 'Database' };
+  }
+  if (QUEUE_SHAPES.has(typeC4Shape)) {
+    return { key: 'queue', label: 'Queue' };
+  }
+  if (isExternal(typeC4Shape)) {
+    return { key: 'external', label: 'External' };
+  }
+  const base = typeC4Shape.replace(/_(db|queue)$/, '');
+  return { key: base, label: STEREOTYPE_NAMES[base] ?? stereotypeLabel(typeC4Shape) };
+};
+
+/**
+ * Derives the legend entries for a diagram: one row per DISTINCT element kind in
+ * use (person, software system, container, component, database, queue, external
+ * and deployment node, as applicable), each with its Structurizr display label
+ * and its outline color from the C4 palette. Rows are ordered stably so the
+ * legend is deterministic regardless of declaration order.
+ */
+export const buildLegendData = (db: C4Db, config: MermaidConfig): C4LegendItem[] => {
+  const c4Config: Record<string, any> = config.c4 ?? {};
+  const seen = new Map<string, C4LegendItem & { order: number }>();
+
+  for (const shape of db.getC4ShapeArray()) {
+    const type = shape.typeC4Shape.text;
+    const { key, label } = legendCategory(type);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.set(key, { label, color: identityColor(type, c4Config), order: LEGEND_ORDER[key] ?? 99 });
+  }
+
+  const hasDeploymentNode = db.getBoundaries().some((boundary) => boundary.nodeType !== undefined);
+  if (hasDeploymentNode && !seen.has('deploymentNode')) {
+    seen.set('deploymentNode', {
+      label: 'Deployment Node',
+      color: DEFAULT_IDENTITY,
+      order: LEGEND_ORDER.deploymentNode,
+    });
+  }
+
+  return [...seen.values()]
+    .sort((a, b) => a.order - b.order)
+    .map(({ label, color }) => ({ label, color }));
 };

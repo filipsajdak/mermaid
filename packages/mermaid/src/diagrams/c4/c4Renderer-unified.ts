@@ -4,7 +4,8 @@ import { getDiagramElement } from '../../rendering-util/insertElementsForSize.js
 import { getRegisteredLayoutAlgorithm, render } from '../../rendering-util/render.js';
 import { setupViewPortForSVG } from '../../rendering-util/setupViewPortForSVG.js';
 import utils from '../../utils.js';
-import { getData } from './c4LayoutData.js';
+import { buildLegendData, getData } from './c4LayoutData.js';
+import { insertLegend } from './c4Legend.js';
 
 /**
  * Renders a C4 diagram through the unified rendering pipeline (dagre by default,
@@ -42,6 +43,12 @@ export const draw = async function (_text: string, id: string, _version: string,
   };
 
   await render(data4Layout, svg);
+
+  // Opt-in auto-generated legend (RFC #7844). Inserted before the viewBox is
+  // computed so it is captured inside it.
+  if (diag.db.getShowLegend?.()) {
+    insertLegend(svg, buildLegendData(diag.db, config), config);
+  }
 
   const padding = c4Config?.diagramMarginY ?? 10;
   utils.insertTitle(svg, 'c4TitleText', padding, diag.db.getTitle());

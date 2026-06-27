@@ -1,7 +1,7 @@
 // @ts-ignore: JISON doesn't support types
 import c4 from './parser/c4Diagram.jison';
 import c4Db from './c4Db.js';
-import { getData } from './c4LayoutData.js';
+import { buildLegendData, getData } from './c4LayoutData.js';
 import { setConfig } from '../../config.js';
 import type { MermaidConfig } from '../../config.type.js';
 
@@ -184,5 +184,80 @@ Rel(b, a, "Returns")
     const { edges } = data();
     expect(edges[0].label).toContain('1: Calls');
     expect(edges[1].label).toContain('2: Returns');
+  });
+
+  describe('auto-generated legend', () => {
+    it('defaults getShowLegend() to false', () => {
+      parse(`C4Context
+Person(a, "A")
+`);
+      expect(c4Db.getShowLegend()).toBe(false);
+    });
+
+    it('SHOW_LEGEND() sets getShowLegend() to true', () => {
+      parse(`C4Context
+Person(a, "A")
+System(b, "B")
+SHOW_LEGEND()
+`);
+      expect(c4Db.getShowLegend()).toBe(true);
+    });
+
+    it('clear() resets the legend flag', () => {
+      parse(`C4Context
+Person(a, "A")
+SHOW_LEGEND()
+`);
+      expect(c4Db.getShowLegend()).toBe(true);
+      c4Db.clear();
+      expect(c4Db.getShowLegend()).toBe(false);
+    });
+
+    it('buildLegendData returns one row per distinct kind for a mixed diagram', () => {
+      parse(`C4Container
+Person(p, "Customer")
+Person_Ext(pe, "Partner")
+System(s, "Banking System")
+Container(c, "API", "Spring Boot")
+ContainerDb(db, "Database", "PostgreSQL")
+ContainerQueue(q, "Events", "Kafka")
+`);
+      const items = buildLegendData(c4Db, { c4: {} } as MermaidConfig);
+      const labels = items.map((i) => i.label);
+      // Person, Software System, Container, Database, Queue and External, each once,
+      // in the stable category order.
+      expect(labels).toEqual([
+        'Person',
+        'Software System',
+        'Container',
+        'Database',
+        'Queue',
+        'External',
+      ]);
+    });
+
+    it('deduplicates repeated kinds and carries the palette outline color', () => {
+      parse(`C4Context
+Person(a, "A")
+Person(b, "B")
+System(s, "S")
+`);
+      const items = buildLegendData(c4Db, {
+        c4: { person_bg_color: '#08427B' },
+      } as MermaidConfig);
+      expect(items).toHaveLength(2);
+      expect(items[0]).toEqual({ label: 'Person', color: '#08427b' });
+    });
+
+    it('adds a Deployment Node row when the diagram uses one', () => {
+      parse(`C4Deployment
+Deployment_Node(n1, "AWS", "Cloud") {
+  Container(c1, "API", "Java")
+}
+`);
+      const labels = buildLegendData(c4Db, { c4: {} } as MermaidConfig).map((i) => i.label);
+      expect(labels).toContain('Deployment Node');
+      expect(labels).toContain('Container');
+    });
   });
 });
