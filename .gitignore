@@ -79,3 +79,6 @@ mermaid-parser.tar.gz
 .tmp
 .fallow/
 .playwright-mcp/
+
+# C4 visual-diff harness output (generated)
+scripts/c4-visual-diff/out/
