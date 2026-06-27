@@ -4,6 +4,31 @@ const getStyles = (options) =>
     fill: ${options.personBkg};
   }
 
+  /* Unified renderer DOM wiring (node / label) - the shapes/clusters are drawn by
+     the shared rendering-elements, which emit .node/.label/.cluster classes. */
+  .label {
+    font-family: ${options.fontFamily};
+    color: ${options.nodeTextColor || options.textColor};
+  }
+  .label text,
+  .label span {
+    fill: ${options.nodeTextColor || options.textColor};
+    color: ${options.nodeTextColor || options.textColor};
+  }
+  .node rect,
+  .node circle,
+  .node path {
+    fill: ${options.mainBkg};
+    stroke: ${options.nodeBorder};
+    stroke-width: 1px;
+  }
+  .node .label {
+    text-align: center;
+  }
+  .node.clickable {
+    cursor: pointer;
+  }
+
   /* C4 outline style (c4model.com): the element's identity colour is set inline
      per element (fill + stroke + color), and the label text inherits it. */
   .c4-shape .label,
@@ -64,6 +89,32 @@ const getStyles = (options) =>
   .edgeLabel rect {
     fill: ${options.background ?? '#ffffff'};
     opacity: 1;
+  }
+
+  /* C4 boundaries are light dashed, mostly-transparent clusters. */
+  .cluster rect {
+    fill: none;
+    stroke: ${options.nodeBorder};
+    stroke-dasharray: 5 5;
+    stroke-width: 1px;
+    stroke-opacity: 0.6;
+  }
+  .cluster .cluster-label {
+    font-family: ${options.fontFamily};
+    text-anchor: start;
+  }
+  .cluster text {
+    fill: ${options.titleColor};
+  }
+  .cluster span {
+    color: ${options.titleColor};
+  }
+
+  .c4TitleText {
+    text-anchor: middle;
+    font-size: 18px;
+    fill: ${options.textColor};
+    font-family: ${options.fontFamily};
   }
 `;
 

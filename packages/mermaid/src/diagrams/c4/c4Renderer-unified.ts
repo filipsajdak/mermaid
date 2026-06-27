@@ -1,0 +1,53 @@
+import { getConfig } from '../../diagram-api/diagramAPI.js';
+import { log } from '../../logger.js';
+import { getDiagramElement } from '../../rendering-util/insertElementsForSize.js';
+import { getRegisteredLayoutAlgorithm, render } from '../../rendering-util/render.js';
+import { setupViewPortForSVG } from '../../rendering-util/setupViewPortForSVG.js';
+import utils from '../../utils.js';
+import { getData } from './c4LayoutData.js';
+
+/**
+ * Renders a C4 diagram through the unified rendering pipeline (dagre by default,
+ * other layout algorithms via registerLayoutLoaders). This is the sole renderer
+ * for legacy C4 syntax: the legacy row-based renderer (c4Renderer.ts / svgDraw.ts)
+ * has been removed.
+ */
+export const draw = async function (_text: string, id: string, _version: string, diag: any) {
+  log.debug('Drawing C4 diagram (unified)', id);
+  const config = getConfig();
+  const { securityLevel, layout } = config;
+  const c4Config = config.c4;
+
+  const data4Layout = getData(diag.db, config);
+
+  const svg = getDiagramElement(id, securityLevel);
+
+  data4Layout.type = diag.type;
+  data4Layout.layoutAlgorithm = getRegisteredLayoutAlgorithm(layout);
+  // direction comes from db.getDirection() via getData(); default defensively.
+  data4Layout.direction = data4Layout.direction ?? 'TB';
+  data4Layout.nodeSpacing = c4Config?.c4ShapeMargin ?? 50;
+  // Extra rank spacing gives relationship labels more vertical room.
+  data4Layout.rankSpacing = (c4Config?.c4ShapeMargin ?? 50) + 40;
+  data4Layout.markers = ['point'];
+  data4Layout.diagramId = id;
+  // Reserve vertical room above cluster children for the boundary title (needs the
+  // dagre subGraphTitleMargin support; paired with the cluster-label-reserve fix).
+  data4Layout.config = {
+    ...data4Layout.config,
+    flowchart: {
+      ...(data4Layout.config?.flowchart ?? {}),
+      subGraphTitleMargin: { top: 40, bottom: 0 },
+    },
+  };
+
+  await render(data4Layout, svg);
+
+  const padding = c4Config?.diagramMarginY ?? 10;
+  utils.insertTitle(svg, 'c4TitleText', padding, diag.db.getTitle());
+  setupViewPortForSVG(svg, padding, 'c4', c4Config?.useMaxWidth ?? true);
+};
+
+export default {
+  draw,
+};
