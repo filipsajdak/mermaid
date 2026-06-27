@@ -66,6 +66,16 @@ const getStyles = (options) =>
     ry: 12px;
   }
 
+  /* Drop shadow for elements flagged via UpdateElementStyle($shadowing="true").
+     A subtle offset shadow on the element outline, matching c4model.com depth. */
+  .c4-shadow rect,
+  .c4-shadow path,
+  .c4-shadow circle,
+  .c4-shadow ellipse,
+  .c4-shadow polygon {
+    filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.35));
+  }
+
   /* External elements: the C4 convention renders them in a muted grey (white
      fill, grey border + grey text) so they read as "outside our scope". This is
      the fallback identity; an \`external_*_bg_color\` palette key (applied inline

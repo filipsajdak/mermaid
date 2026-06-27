@@ -94,6 +94,19 @@ Person(p, "P", "desc", $link="https://example.com")
     expect(nodes.find((n) => n.id === 'p')?.link).toBe('https://example.com');
   });
 
+  it('adds the c4-shadow class when UpdateElementStyle sets $shadowing', () => {
+    parse(`C4Context
+System(a, "A")
+System(b, "B")
+UpdateElementStyle(a, $shadowing="true")
+UpdateElementStyle(b, $shadowing="false")
+`);
+    const { nodes } = data();
+    expect(nodes.find((n) => n.id === 'a')?.cssClasses).toContain('c4-shadow');
+    // The literal 'false' is treated as shadow off.
+    expect(nodes.find((n) => n.id === 'b')?.cssClasses).not.toContain('c4-shadow');
+  });
+
   it('applies the configured C4 palette as an outline (border + text) over a light fill', () => {
     parse(`C4Context
 Person(a, "A")
@@ -314,6 +327,30 @@ Deployment_Node(n1, "AWS", "Cloud") {
       const labels = buildLegendData(c4Db, { c4: {} } as MermaidConfig).map((i) => i.label);
       expect(labels).toContain('Deployment Node');
       expect(labels).toContain('Container');
+    });
+
+    it('contributes a custom legend row for an element $legendText', () => {
+      parse(`C4Context
+Person(a, "A")
+System(s, "S")
+UpdateElementStyle(s, $legendText="My custom system")
+`);
+      const labels = buildLegendData(c4Db, { c4: {} } as MermaidConfig).map((i) => i.label);
+      // The element with $legendText contributes its own row (after the kind rows);
+      // an element without one still contributes its kind row.
+      expect(labels).toContain('My custom system');
+      expect(labels).toContain('Person');
+    });
+
+    it('de-duplicates repeated $legendText rows', () => {
+      parse(`C4Context
+System(s1, "S1")
+System(s2, "S2")
+UpdateElementStyle(s1, $legendText="Shared")
+UpdateElementStyle(s2, $legendText="Shared")
+`);
+      const labels = buildLegendData(c4Db, { c4: {} } as MermaidConfig).map((i) => i.label);
+      expect(labels.filter((l) => l === 'Shared')).toHaveLength(1);
     });
   });
 });

@@ -29,6 +29,7 @@ interface C4Shape {
   sprite?: string;
   tags?: string;
   shadowing?: string;
+  legendText?: string;
 }
 
 interface C4Boundary {
@@ -170,6 +171,11 @@ const stereotypeLabel = (typeC4Shape: string): string => {
 };
 
 const isExternal = (typeC4Shape: string): boolean => typeC4Shape.startsWith('external_');
+
+// An element carries a drop shadow when UpdateElementStyle set `$shadowing` to a
+// truthy value (the parser hands over a string; treat the literal 'false' as off).
+const hasShadow = (shadowing: string | undefined): boolean =>
+  shadowing !== undefined && shadowing !== '' && shadowing !== 'false';
 
 const escapeHtml = (txt: string): string =>
   txt.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
@@ -369,7 +375,9 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
       shape: resolveNodeShape(shape, elementTagMap),
       parentId: parentIdOf(shape.parentBoundary),
       padding: shapePadding,
-      cssClasses: `c4-shape c4-${type}${isExternal(type) ? ' c4-external' : ''}`,
+      cssClasses: `c4-shape c4-${type}${isExternal(type) ? ' c4-external' : ''}${
+        hasShadow(shape.shadowing) ? ' c4-shadow' : ''
+      }`,
       cssStyles: [
         ...configColorStyles(type, c4Config, background),
         ...elementTagStyles(shape.tags, elementTagMap),
@@ -469,9 +477,25 @@ const legendCategory = (typeC4Shape: string): { key: string; label: string } => 
 export const buildLegendData = (db: C4Db, config: MermaidConfig): C4LegendItem[] => {
   const c4Config: Record<string, any> = config.c4 ?? {};
   const seen = new Map<string, C4LegendItem & { order: number }>();
+  // Custom legend rows contributed by an element's `UpdateElementStyle($legendText)`.
+  // De-duped by text and ordered after the kind rows (1000+ keeps them last).
+  // NOTE: `$legendSprite` (a per-element legend icon) is deferred until the C4
+  // renderer gains icon-pack support; only the legend *text* is honoured here.
+  const custom = new Map<string, C4LegendItem & { order: number }>();
+  let customOrder = 0;
 
   for (const shape of db.getC4ShapeArray()) {
     const type = shape.typeC4Shape.text;
+    if (shape.legendText) {
+      if (!custom.has(shape.legendText)) {
+        custom.set(shape.legendText, {
+          label: shape.legendText,
+          color: identityColor(type, c4Config),
+          order: 1000 + customOrder++,
+        });
+      }
+      continue;
+    }
     const { key, label } = legendCategory(type);
     if (seen.has(key)) {
       continue;
@@ -488,7 +512,7 @@ export const buildLegendData = (db: C4Db, config: MermaidConfig): C4LegendItem[]
     });
   }
 
-  return [...seen.values()]
+  return [...seen.values(), ...custom.values()]
     .sort((a, b) => a.order - b.order)
     .map(({ label, color }) => ({ label, color }));
 };
