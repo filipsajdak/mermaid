@@ -55,6 +55,8 @@ interface C4Rel {
   textColor?: string;
   lineColor?: string;
   tags?: string;
+  /** Explicit step number from `RelIndex(N, ...)`, honoured by C4Dynamic numbering. */
+  relIndex?: string;
 }
 
 interface C4ElementTag {
@@ -420,12 +422,23 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
     });
   }
 
+  // C4Dynamic step numbering: a rel declared via RelIndex(N, ...) shows its
+  // explicit number N; a plain Rel(...) gets the next auto step. The auto counter
+  // only advances for un-indexed rels, so a diagram of plain Rels still numbers
+  // 1, 2, 3, ... in declaration order (explicit numbers don't consume a slot).
+  let autoStep = 0;
   db.getRels().forEach((rel, index) => {
     const isBidirectional = rel.type === 'birel';
     const isBack = rel.type === 'rel_b';
-    // C4Dynamic prepends a 1-based step number to the relationship label.
+    // C4Dynamic prepends a step number to the relationship label.
     const labelRel = isDynamic
-      ? { ...rel, label: { ...rel.label, text: `${index + 1}: ${rel.label.text}` } }
+      ? {
+          ...rel,
+          label: {
+            ...rel.label,
+            text: `${rel.relIndex ?? ++autoStep}: ${rel.label.text}`,
+          },
+        }
       : rel;
     const { style: tagStyle, labelStyle: tagLabelStyle } = relTagStyles(rel.tags, relTagMap);
     const style: string[] = [...tagStyle];
