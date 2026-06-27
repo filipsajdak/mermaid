@@ -1,52 +1,12 @@
 import { getConfig } from '../../diagram-api/diagramAPI.js';
-import type { DiagramRenderer, DrawDefinition, SVG } from '../../diagram-api/types.js';
+import type { DiagramRenderer, DrawDefinition } from '../../diagram-api/types.js';
 import { log } from '../../logger.js';
 import { getDiagramElement } from '../../rendering-util/insertElementsForSize.js';
 import { getRegisteredLayoutAlgorithm, render } from '../../rendering-util/render.js';
 import { setupViewPortForSVG } from '../../rendering-util/setupViewPortForSVG.js';
 import utils from '../../utils.js';
 import type { C4BetaDB } from './db.js';
-import type { C4BetaLegendItem } from './types.js';
-
-const LEGEND_ROW_HEIGHT = 18;
-const LEGEND_SWATCH_SIZE = 12;
-
-/**
- * Appends the auto-generated legend below the bottom-left corner of the
- * rendered diagram as plain SVG (no layout engine involvement). Must run
- * before setupViewPortForSVG so the viewBox includes the legend.
- */
-const insertLegend = (svg: SVG, items: C4BetaLegendItem[]) => {
-  if (items.length === 0) {
-    return;
-  }
-  const diagramBounds = svg.node()!.getBBox();
-  const legend = svg.append('g').attr('class', 'c4-legend');
-  legend.append('text').attr('x', 0).attr('y', 0).attr('font-weight', 'bold').text('Legend');
-  items.forEach((item, index) => {
-    const rowBaseline = (index + 1) * LEGEND_ROW_HEIGHT;
-    legend
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', rowBaseline - LEGEND_SWATCH_SIZE)
-      .attr('width', LEGEND_SWATCH_SIZE)
-      .attr('height', LEGEND_SWATCH_SIZE)
-      .attr('fill', item.fill ?? 'none')
-      .attr('stroke', item.stroke ?? item.fill ?? 'none');
-    legend
-      .append('text')
-      .attr('x', LEGEND_SWATCH_SIZE + 6)
-      .attr('y', rowBaseline)
-      .text(item.label);
-  });
-  const legendBounds = legend.node()!.getBBox();
-  legend.attr(
-    'transform',
-    `translate(${diagramBounds.x}, ${
-      diagramBounds.y + diagramBounds.height + LEGEND_ROW_HEIGHT - legendBounds.y
-    })`
-  );
-};
+import { insertLegend } from '../c4/c4Legend.js';
 
 const draw: DrawDefinition = async function (_text, id, _version, diag) {
   log.debug('Drawing c4-beta diagram', id);
@@ -78,7 +38,11 @@ const draw: DrawDefinition = async function (_text, id, _version, diag) {
   await render(data4Layout, svg);
 
   if (db.isLegendEnabled()) {
-    insertLegend(svg, db.getLegendItems());
+    // Map c4-beta legend items onto the shared C4LegendItem shape (outline colour).
+    const legendItems = db
+      .getLegendItems()
+      .map((i) => ({ label: i.label, color: i.stroke ?? i.fill ?? '#6b6b6b' }));
+    insertLegend(svg, legendItems, getConfig());
   }
 
   utils.insertTitle(svg, 'c4TitleText', 30, db.getDiagramTitle());

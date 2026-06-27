@@ -51,8 +51,17 @@ export const insertLegend = (
     .attr('class', 'c4-legend')
     .attr('transform', `translate(${originX}, ${originY})`);
 
+  // A bold "Legend" header above the rows; the rows then start one row down.
+  group
+    .append('text')
+    .attr('class', 'c4-legend-title')
+    .attr('x', 0)
+    .attr('y', 0)
+    .attr('font-weight', 'bold')
+    .text('Legend');
+
   legendItems.forEach((item, index) => {
-    const row = group.append('g').attr('transform', `translate(0, ${index * rowHeight})`);
+    const row = group.append('g').attr('transform', `translate(0, ${(index + 1) * rowHeight})`);
     row
       .append('rect')
       .attr('class', 'c4-legend-swatch')
