@@ -2,6 +2,7 @@ import * as khroma from 'khroma';
 
 export interface C4BetaStyleOptions {
   arrowheadColor: string;
+  background?: string;
   edgeLabelBackground: string;
   fontFamily: string;
   lineColor: string;
@@ -48,9 +49,13 @@ const getStyles = (options: C4BetaStyleOptions) =>
     color: ${options.nodeTextColor || options.textColor};
   }
 
+  /* C4 elements are white boxes (the diagram background) with a coloured outline,
+   * matching c4model.com and the legacy C4 renderer. The circle selector covers the
+   * person head so it is not left with the shape's default (black) fill. */
   .node rect,
-  .node path {
-    fill: ${options.mainBkg};
+  .node path,
+  .node circle {
+    fill: ${options.background ?? '#ffffff'};
     stroke: ${options.nodeBorder};
     stroke-width: ${options.strokeWidth ?? 1}px;
   }
