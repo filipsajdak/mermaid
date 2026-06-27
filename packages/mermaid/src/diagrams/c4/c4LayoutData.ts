@@ -21,6 +21,11 @@ interface C4Shape {
   parentBoundary: string;
   techn?: C4Text;
   descr?: C4Text;
+  // Optional deployment instance count, e.g. `$instances="3"` on a
+  // SoftwareSystemInstance / ContainerInstance. The db stores it as `{ text }`
+  // when it lands in the descr/techn slot, or as a raw string via the generic
+  // attribute path, so accept both forms.
+  instances?: C4Text | string;
   bgColor?: string;
   fontColor?: string;
   borderColor?: string;
@@ -191,6 +196,9 @@ const STEREOTYPE_NAMES: Record<string, string> = {
   system: 'Software System',
   container: 'Container',
   component: 'Component',
+  // Structurizr deployment instances (rendered as approximated element boxes).
+  system_instance: 'Software System Instance',
+  container_instance: 'Container Instance',
 };
 
 // Structurizr-style stereotype, e.g. `Software System` for system / system_db / external_system.
@@ -198,6 +206,15 @@ const stereotypeLabel = (typeC4Shape: string): string => {
   const base = typeC4Shape.replace(/^external_/, '').replace(/_(db|queue)$/, '');
   return STEREOTYPE_NAMES[base] ?? base.replace(/_/g, ' ');
 };
+
+// Deployment instances have no palette entry of their own; they borrow their
+// defining element's identity colour (an instance of a system looks like the
+// system, an instance of a container like the container).
+const PALETTE_BASE: Record<string, string> = {
+  system_instance: 'system',
+  container_instance: 'container',
+};
+const paletteKey = (typeC4Shape: string): string => PALETTE_BASE[typeC4Shape] ?? typeC4Shape;
 
 const isExternal = (typeC4Shape: string): boolean => typeC4Shape.startsWith('external_');
 
@@ -220,6 +237,11 @@ const buildNodeLabel = (shape: C4Shape): string => {
   ];
   if (shape.descr?.text) {
     lines.push(`<span class="c4-descr">${escapeHtml(shape.descr.text)}</span>`);
+  }
+  // Deployment instance count (e.g. `$instances="3"`) shown as a small annotation.
+  const instances = typeof shape.instances === 'string' ? shape.instances : shape.instances?.text;
+  if (instances) {
+    lines.push(`<span class="c4-instances">(x${escapeHtml(instances)})</span>`);
   }
   return lines.join('<br/>');
 };
@@ -336,7 +358,7 @@ const DEFAULT_IDENTITY = '#6b6b6b';
 // Outline identity color for an element type: the readable palette color used as
 // border + text. Mirrors configColorStyles' stroke/text choice.
 const identityColor = (typeC4Shape: string, c4Config: Record<string, any>): string => {
-  const bg = c4Config[`${typeC4Shape}_bg_color`];
+  const bg = c4Config[`${paletteKey(typeC4Shape)}_bg_color`];
   return typeof bg === 'string' ? ensureReadable(bg) : DEFAULT_IDENTITY;
 };
 
@@ -350,7 +372,7 @@ const configColorStyles = (
   background: string
 ): string[] => {
   const styles: string[] = [`fill:${background}`];
-  const bg = c4Config[`${typeC4Shape}_bg_color`];
+  const bg = c4Config[`${paletteKey(typeC4Shape)}_bg_color`];
   if (typeof bg === 'string') {
     const identity = ensureReadable(bg);
     styles.push(`stroke:${identity}`, `color:${identity}`);

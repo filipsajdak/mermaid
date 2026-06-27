@@ -269,6 +269,34 @@ Deployment_Node(n1, "AWS", "Cloud") {
     expect(nodes.find((n) => n.id === 'c1')).toMatchObject({ isGroup: false, parentId: 'n1' });
   });
 
+  it('parses SoftwareSystemInstance / ContainerInstance inside a Deployment_Node', () => {
+    parse(`C4Deployment
+Deployment_Node(n1, "AWS", "Cloud") {
+  SoftwareSystemInstance(ssi, "Banking System")
+  ContainerInstance(ci, "API", "Spring Boot")
+}
+`);
+    const { nodes } = data();
+    const ssi = nodes.find((n) => n.id === 'ssi');
+    const ci = nodes.find((n) => n.id === 'ci');
+    // Both are approximated as plain (rounded) element boxes parented to the node.
+    expect(ssi).toMatchObject({ isGroup: false, parentId: 'n1', shape: 'rounded' });
+    expect(ci).toMatchObject({ isGroup: false, parentId: 'n1', shape: 'rounded' });
+    // Each carries its Structurizr stereotype.
+    expect(ssi?.label).toContain('[Software System Instance]');
+    expect(ci?.label).toContain('[Container Instance: Spring Boot]');
+  });
+
+  it('annotates a deployment instance with its $instances count', () => {
+    parse(`C4Deployment
+Deployment_Node(n1, "AWS", "Cloud") {
+  ContainerInstance(ci, "API", $instances="3")
+}
+`);
+    const ci = data().nodes.find((n) => n.id === 'ci');
+    expect(ci?.label).toContain('(x3)');
+  });
+
   it('emits the db direction into LayoutData (defaults to TB)', () => {
     parse(`C4Context
 Person(a, "A")

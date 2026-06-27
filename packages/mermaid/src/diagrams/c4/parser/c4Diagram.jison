@@ -52,6 +52,10 @@
 %x node_l
 %x node_r
 
+/* Deployment instances (Structurizr SoftwareSystemInstance / ContainerInstance) */
+%x system_instance
+%x container_instance
+
 /* Relationship Types */
 %x rel
 %x rel_bi
@@ -113,6 +117,7 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "System_Ext"                              { this.begin("system_ext"); return 'SYSTEM_EXT';}
 "SystemQueue"                             { this.begin("system_queue"); return 'SYSTEM_QUEUE';}
 "SystemDb"                                { this.begin("system_db"); return 'SYSTEM_DB';}
+"SoftwareSystemInstance"                  { this.begin("system_instance"); return 'SYSTEM_INSTANCE';}
 "System"                                  { this.begin("system"); return 'SYSTEM';}
 
 "Boundary"                                { this.begin("boundary"); return 'BOUNDARY';}
@@ -124,6 +129,7 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "Container_Ext"                              { this.begin("container_ext"); return 'CONTAINER_EXT';}
 "ContainerQueue"                             { this.begin("container_queue"); return 'CONTAINER_QUEUE';}
 "ContainerDb"                                { this.begin("container_db"); return 'CONTAINER_DB';}
+"ContainerInstance"                          { this.begin("container_instance"); return 'CONTAINER_INSTANCE';}
 "Container"                                  { this.begin("container"); return 'CONTAINER';}
 
 "Container_Boundary"                         { this.begin("container_boundary"); return 'CONTAINER_BOUNDARY';}
@@ -162,10 +168,10 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "SHOW_LEGEND"\s*\(\s*\)                   return 'SHOW_LEGEND';
 "UpdateLayoutConfig"                      { this.begin("update_layout_config"); return 'UPDATE_LAYOUT_CONFIG';}
 
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config><<EOF>>                return "EOF_IN_STRUCT";
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(][ ]*[,]             { this.begin("attribute"); return "ATTRIBUTE_EMPTY";}
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(]                    { this.begin("attribute"); }
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config,attribute>[)]          { this.popState();this.popState();}
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config><<EOF>>                return "EOF_IN_STRUCT";
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(][ ]*[,]             { this.begin("attribute"); return "ATTRIBUTE_EMPTY";}
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(]                    { this.begin("attribute"); }
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config,attribute>[)]          { this.popState();this.popState();}
 
 <attribute>",,"                           { return 'ATTRIBUTE_EMPTY';}
 <attribute>","                            { }
@@ -294,6 +300,8 @@ diagramStatement
     | CONTAINER_EXT attributes {yy.addContainer('external_container', ...$2); $$=$2;}
     | CONTAINER_EXT_DB attributes {yy.addContainer('external_container_db', ...$2); $$=$2;}
     | CONTAINER_EXT_QUEUE attributes {yy.addContainer('external_container_queue', ...$2); $$=$2;}
+    | SYSTEM_INSTANCE attributes {yy.addPersonOrSystem('system_instance', ...$2); $$=$2;}
+    | CONTAINER_INSTANCE attributes {yy.addContainer('container_instance', ...$2); $$=$2;}
     | COMPONENT attributes {yy.addComponent('component', ...$2); $$=$2;}
     | COMPONENT_DB attributes {yy.addComponent('component_db', ...$2); $$=$2;}
     | COMPONENT_QUEUE attributes {yy.addComponent('component_queue', ...$2); $$=$2;}
