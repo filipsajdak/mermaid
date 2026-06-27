@@ -3,7 +3,11 @@ import type { DiagramDB } from '../../diagram-api/types.js';
 import { log } from '../../logger.js';
 import type { Edge, LayoutData, Node } from '../../rendering-util/types.js';
 import { keywordShape } from '../c4/c4ShapeVocabulary.js';
-import { buildElementLabel as buildSharedElementLabel, escapeHtml } from '../c4/c4Labels.js';
+import {
+  buildElementLabel as buildSharedElementLabel,
+  buildRelationshipLabel as buildSharedRelationshipLabel,
+  escapeHtml,
+} from '../c4/c4Labels.js';
 import {
   clear as commonClear,
   getAccDescription,
@@ -81,18 +85,20 @@ const buildRelationshipLabel = (
   if (!relationship.description && step === undefined) {
     return undefined;
   }
-  const titleParts: string[] = [];
+  // The c4-beta relationship "label" is its (optionally step-numbered) description;
+  // the shared builder escapes it and adds the `[technology]` line, so legacy C4 and
+  // c4-beta render relationship labels identically.
+  const labelParts: string[] = [];
   if (step !== undefined) {
-    titleParts.push(`${step}.`);
+    labelParts.push(`${step}.`);
   }
   if (relationship.description) {
-    titleParts.push(escapeHtml(relationship.description));
+    labelParts.push(relationship.description);
   }
-  const lines: string[] = [`<b>${titleParts.join(' ')}</b>`];
-  if (relationship.technology) {
-    lines.push(`<small><i>[${escapeHtml(relationship.technology)}]</i></small>`);
-  }
-  return lines.join('<br/>');
+  return buildSharedRelationshipLabel({
+    label: labelParts.join(' '),
+    technology: relationship.technology,
+  });
 };
 
 /**
