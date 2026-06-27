@@ -40,11 +40,12 @@ export async function c4Database<T extends SVGGraphicsElement>(parent: D3Selecti
 
   updateNodeBounds(node, group);
 
-  // The body is centred on the origin, so the label centres there too (clear of
-  // the top cap, since bodyHeight reserves `padding` above the text).
+  // Centre the label between the cap front-curves, not on the body rectangle: the top
+  // cap dips `ry` into the body while the bottom cap adds `ry` of space below, so nudge
+  // the label down by `ry` to balance the clear space above and below it on the side.
   label.attr(
     'transform',
-    `translate(${-(bbox.width / 2) - (bbox.x - (bbox.left ?? 0))}, ${-(bbox.height / 2) - (bbox.y - (bbox.top ?? 0))})`
+    `translate(${-(bbox.width / 2) - (bbox.x - (bbox.left ?? 0))}, ${-(bbox.height / 2) - (bbox.y - (bbox.top ?? 0)) + ry})`
   );
 
   node.intersect = function (point) {
