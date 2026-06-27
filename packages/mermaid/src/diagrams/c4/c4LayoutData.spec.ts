@@ -103,6 +103,40 @@ System_Ext(b, "B")
     expect(ext.some((s) => /^stroke:#[\da-f]{6}$/.test(s) && s !== 'stroke:#999999')).toBe(true);
   });
 
+  it('applies a defined AddElementTag colors to a tagged element', () => {
+    parse(`C4Context
+Person(a, "A", "Customer", $tags="v1")
+AddElementTag("v1", $bgColor="#ff0000", $borderColor="#00ff00", $fontColor="#0000ff")
+`);
+    const { nodes } = data();
+    const a = nodes.find((n) => n.id === 'a');
+    expect(a?.cssStyles).toEqual(
+      expect.arrayContaining(['fill:#ff0000', 'stroke:#00ff00', 'color:#0000ff'])
+    );
+  });
+
+  it('lets an explicit UpdateElementStyle win over a tag color', () => {
+    parse(`C4Context
+System(s, "S", "Desc", $tags="v1")
+AddElementTag("v1", $bgColor="#ff0000")
+UpdateElementStyle(s, $bgColor="#123456")
+`);
+    const { nodes } = data();
+    const styles = nodes.find((n) => n.id === 's')?.cssStyles ?? [];
+    // Both fills are present; the explicit one is appended last so it wins.
+    expect(styles.lastIndexOf('fill:#123456')).toBeGreaterThan(styles.indexOf('fill:#ff0000'));
+  });
+
+  it('marks an external (*_Ext) element with the c4-external cssClass', () => {
+    parse(`C4Context
+System_Ext(ext, "External system")
+System(internal, "Internal system")
+`);
+    const { nodes } = data();
+    expect(nodes.find((n) => n.id === 'ext')?.cssClasses).toContain('c4-external');
+    expect(nodes.find((n) => n.id === 'internal')?.cssClasses).not.toContain('c4-external');
+  });
+
   it('maps element variants to dedicated shapes', () => {
     parse(`C4Context
 SystemDb(db1, "Database")

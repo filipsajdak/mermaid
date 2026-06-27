@@ -66,6 +66,27 @@ const getStyles = (options) =>
     ry: 12px;
   }
 
+  /* External elements: the C4 convention renders them in a muted grey (white
+     fill, grey border + grey text) so they read as "outside our scope". This is
+     the fallback identity; an \`external_*_bg_color\` palette key (applied inline
+     by getData) or an explicit element style still overrides it. */
+  .c4-external rect,
+  .c4-external path,
+  .c4-external circle,
+  .c4-external ellipse,
+  .c4-external polygon,
+  .c4-external line {
+    fill: #ffffff;
+    stroke: #8c8c8c;
+  }
+  .c4-external .label,
+  .c4-external .label text,
+  .c4-external .label span,
+  .c4-external .label p {
+    color: #8c8c8c;
+    fill: #8c8c8c;
+  }
+
   /* Relationships: dashed lines with an arrowhead, as on c4model.com. */
   .edgePaths .path,
   path.c4-rel {
