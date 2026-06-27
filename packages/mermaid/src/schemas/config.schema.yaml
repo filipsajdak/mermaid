@@ -874,7 +874,6 @@ $defs: # JSON Schema definition (maybe we should move these to a separate file)
       external_component_queue_border_color:
         type: string
         default: '#BFBFBF'
-
       # Font Calculators
       # By default, these all return the values from this configuration.
       personFont: { '$ref': '#/$defs/FontCalculator' }

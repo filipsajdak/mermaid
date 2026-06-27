@@ -43,6 +43,9 @@
 %x component_ext_db
 %x component_ext_queue
 
+/* code (Level 4 - Code) */
+%x code
+
 /* Dynamic diagram */
 %x rel_index
 %x index
@@ -111,6 +114,7 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "C4Component"                             return 'C4_COMPONENT';
 "C4Dynamic"                               return 'C4_DYNAMIC';
 "C4Deployment"                            return 'C4_DEPLOYMENT';
+"C4Code"                                  return 'C4_CODE';
 
 "Person_Ext"                              { this.begin("person_ext"); return 'PERSON_EXT';}
 "Person"                                  { this.begin("person"); return 'PERSON';}
@@ -143,6 +147,8 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "ComponentDb"                                { this.begin("component_db"); return 'COMPONENT_DB';}
 "Component"                                  { this.begin("component"); return 'COMPONENT';}
 
+"Code"                                       { this.begin("code"); return 'CODE';}
+
 "Deployment_Node"                         { this.begin("node"); return 'NODE';}
 "InfrastructureNode"                      { this.begin("infrastructure_node"); return 'INFRASTRUCTURE_NODE';}
 "Node"                                    { this.begin("node"); return 'NODE';}
@@ -171,10 +177,10 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "SHOW_LEGEND"\s*\(\s*\)                   return 'SHOW_LEGEND';
 "UpdateLayoutConfig"                      { this.begin("update_layout_config"); return 'UPDATE_LAYOUT_CONFIG';}
 
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config><<EOF>>                return "EOF_IN_STRUCT";
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(][ ]*[,]             { this.begin("attribute"); return "ATTRIBUTE_EMPTY";}
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(]                    { this.begin("attribute"); }
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config,attribute>[)]          { this.popState();this.popState();}
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,code,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config><<EOF>>                return "EOF_IN_STRUCT";
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,code,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(][ ]*[,]             { this.begin("attribute"); return "ATTRIBUTE_EMPTY";}
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,code,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(]                    { this.begin("attribute"); }
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,code,node,node_l,node_r,infrastructure_node,system_instance,container_instance,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config,attribute>[)]          { this.popState();this.popState();}
 
 <attribute>",,"                           { return 'ATTRIBUTE_EMPTY';}
 <attribute>","                            { }
@@ -236,6 +242,7 @@ graphConfig
     | C4_COMPONENT NEWLINE statements EOF {yy.setC4Type($1)}
     | C4_DYNAMIC NEWLINE statements EOF {yy.setC4Type($1)}
     | C4_DEPLOYMENT NEWLINE statements EOF {yy.setC4Type($1)}
+    | C4_CODE NEWLINE statements EOF {yy.setC4Type($1)}
     ;
 
 statements
@@ -312,6 +319,7 @@ diagramStatement
     | COMPONENT_EXT attributes {yy.addComponent('external_component', ...$2); $$=$2;}
     | COMPONENT_EXT_DB attributes {yy.addComponent('external_component_db', ...$2); $$=$2;}
     | COMPONENT_EXT_QUEUE attributes {yy.addComponent('external_component_queue', ...$2); $$=$2;}
+    | CODE attributes {yy.addContainer('code', ...$2); $$=$2;}
     | INFRASTRUCTURE_NODE attributes {yy.addContainer('infrastructure_node', ...$2); $$=$2;}
     | boundaryStatement
     | REL attributes {yy.addRel('rel', ...$2); $$=$2;}

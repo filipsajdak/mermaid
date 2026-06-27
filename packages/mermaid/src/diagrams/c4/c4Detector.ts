@@ -7,7 +7,9 @@ import type {
 const id = 'c4';
 
 const detector: DiagramDetector = (txt) => {
-  return /^\s*C4Context|C4Landscape|C4Container|C4Component|C4Dynamic|C4Deployment/.test(txt);
+  return /^\s*C4Context|C4Landscape|C4Container|C4Component|C4Dynamic|C4Deployment|C4Code/.test(
+    txt
+  );
 };
 
 const loader: DiagramLoader = async () => {
