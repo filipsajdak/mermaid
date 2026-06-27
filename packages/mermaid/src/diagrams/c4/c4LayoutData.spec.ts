@@ -305,6 +305,24 @@ Rel(b, a, "Returns")
     expect(edges[1].label).toContain('2: Returns');
   });
 
+  it('parses a C4Landscape diagram into person/system nodes like C4Context', () => {
+    parse(`C4Landscape
+title Enterprise System Landscape
+Person(customer, "Customer", "A customer of the bank.")
+System(banking, "Internet Banking System")
+System_Ext(email, "E-mail System")
+Rel(customer, banking, "Uses")
+`);
+    expect(c4Db.getC4Type()).toBe('C4Landscape');
+    const { nodes, edges } = data();
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    expect(byId.get('customer')).toMatchObject({ isGroup: false, shape: 'c4-person' });
+    expect(byId.get('banking')).toMatchObject({ isGroup: false, shape: 'rounded' });
+    expect(byId.get('email')?.cssClasses).toContain('c4-external');
+    expect(edges).toHaveLength(1);
+    expect(edges[0]).toMatchObject({ start: 'customer', end: 'banking' });
+  });
+
   describe('auto-generated legend', () => {
     it('defaults getShowLegend() to false', () => {
       parse(`C4Context
