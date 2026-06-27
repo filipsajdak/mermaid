@@ -51,6 +51,7 @@
 %x node
 %x node_l
 %x node_r
+%x infrastructure_node
 
 /* Relationship Types */
 %x rel
@@ -136,6 +137,7 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "Component"                                  { this.begin("component"); return 'COMPONENT';}
 
 "Deployment_Node"                         { this.begin("node"); return 'NODE';}
+"InfrastructureNode"                      { this.begin("infrastructure_node"); return 'INFRASTRUCTURE_NODE';}
 "Node"                                    { this.begin("node"); return 'NODE';}
 "Node_L"                                  { this.begin("node_l"); return 'NODE_L';}
 "Node_R"                                  { this.begin("node_r"); return 'NODE_R';}
@@ -162,10 +164,10 @@ accDescr\s*"{"\s*                         { this.begin("acc_descr_multiline");}
 "SHOW_LEGEND"\s*\(\s*\)                   return 'SHOW_LEGEND';
 "UpdateLayoutConfig"                      { this.begin("update_layout_config"); return 'UPDATE_LAYOUT_CONFIG';}
 
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config><<EOF>>                return "EOF_IN_STRUCT";
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(][ ]*[,]             { this.begin("attribute"); return "ATTRIBUTE_EMPTY";}
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(]                    { this.begin("attribute"); }
-<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config,attribute>[)]          { this.popState();this.popState();}
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config><<EOF>>                return "EOF_IN_STRUCT";
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(][ ]*[,]             { this.begin("attribute"); return "ATTRIBUTE_EMPTY";}
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config>[(]                    { this.begin("attribute"); }
+<person,person_ext,system_ext_queue,system_ext_db,system_ext,system_queue,system_db,system,boundary,enterprise_boundary,system_boundary,container_ext_db,container_ext_queue,container_ext,container_queue,container_db,container,container_boundary,component_ext_db,component_ext_queue,component_ext,component_queue,component_db,component,node,node_l,node_r,infrastructure_node,rel,birel,rel_u,rel_d,rel_l,rel_r,rel_b,rel_index,update_el_style,update_rel_style,update_layout_config,attribute>[)]          { this.popState();this.popState();}
 
 <attribute>",,"                           { return 'ATTRIBUTE_EMPTY';}
 <attribute>","                            { }
@@ -300,6 +302,7 @@ diagramStatement
     | COMPONENT_EXT attributes {yy.addComponent('external_component', ...$2); $$=$2;}
     | COMPONENT_EXT_DB attributes {yy.addComponent('external_component_db', ...$2); $$=$2;}
     | COMPONENT_EXT_QUEUE attributes {yy.addComponent('external_component_queue', ...$2); $$=$2;}
+    | INFRASTRUCTURE_NODE attributes {yy.addContainer('infrastructure_node', ...$2); $$=$2;}
     | boundaryStatement
     | REL attributes {yy.addRel('rel', ...$2); $$=$2;}
     | BIREL attributes {yy.addRel('birel', ...$2); $$=$2;}
