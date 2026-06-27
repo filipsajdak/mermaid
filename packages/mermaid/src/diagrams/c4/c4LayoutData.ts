@@ -124,15 +124,44 @@ const SHAPE_KEYWORDS: Record<string, ShapeID> = {
 const keywordShape = (value: string | undefined): ShapeID | undefined =>
   value ? SHAPE_KEYWORDS[value.toLowerCase()] : undefined;
 
+// The unified renderer's icon shape (reads node.icon and resolves it against the
+// icon packs the user registered via registerIconPacks). Used when a $sprite or
+// $shape is not a built-in keyword but an icon name (e.g. "logos:aws-lambda").
+const ICON_SHAPE: ShapeID = 'iconRounded';
+
+// A non-empty $shape/$sprite that is NOT a recognised keyword is treated as an
+// icon name; returns the trimmed name, or undefined when empty / keyword.
+const iconName = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+  return trimmed && !keywordShape(trimmed) ? trimmed : undefined;
+};
+
+/** The render shape for a C4 element, plus an optional icon name for the icon shape. */
+interface ResolvedShape {
+  shape: ShapeID;
+  icon?: string;
+}
+
 /**
- * Resolves the render shape for a C4 element: explicit $shape/$sprite first,
- * then a $tags token (a defined AddElementTag shape, then a built-in keyword),
- * then the element type.
+ * Resolves the render shape for a C4 element: explicit $shape/$sprite first
+ * (a built-in keyword maps to a c4 shape; any other non-empty value is treated
+ * as an icon name rendered via the unified icon shape), then a $tags token
+ * (a defined AddElementTag shape, then a built-in keyword), then the element type.
  */
-const resolveNodeShape = (shape: C4Shape, elementTags: Map<string, C4ElementTag>): ShapeID => {
+const resolveNodeShape = (
+  shape: C4Shape,
+  elementTags: Map<string, C4ElementTag>
+): ResolvedShape => {
   const explicit = keywordShape(shape.shape) ?? keywordShape(shape.sprite);
   if (explicit) {
-    return explicit;
+    return { shape: explicit };
+  }
+  // A non-keyword $shape/$sprite is an icon name (e.g. "logos:aws-lambda"): render
+  // the element with the unified icon shape. $sprite is the icon-bearing attribute,
+  // so it wins over $shape when both carry a non-keyword value.
+  const icon = iconName(shape.sprite) ?? iconName(shape.shape);
+  if (icon) {
+    return { shape: ICON_SHAPE, icon };
   }
   if (shape.tags) {
     for (const raw of shape.tags.split(',')) {
@@ -140,21 +169,21 @@ const resolveNodeShape = (shape: C4Shape, elementTags: Map<string, C4ElementTag>
       const definedShape = keywordShape(elementTags.get(tag)?.shape);
       const tagged = definedShape ?? keywordShape(tag);
       if (tagged) {
-        return tagged;
+        return { shape: tagged };
       }
     }
   }
   const typeC4Shape = shape.typeC4Shape.text;
   if (typeC4Shape === 'person' || typeC4Shape === 'external_person') {
-    return 'c4-person';
+    return { shape: 'c4-person' };
   }
   if (DB_SHAPES.has(typeC4Shape)) {
-    return 'c4-database';
+    return { shape: 'c4-database' };
   }
   if (QUEUE_SHAPES.has(typeC4Shape)) {
-    return 'c4-queue';
+    return { shape: 'c4-queue' };
   }
-  return 'rounded';
+  return { shape: 'rounded' };
 };
 
 const STEREOTYPE_NAMES: Record<string, string> = {
@@ -368,11 +397,13 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
 
   for (const shape of db.getC4ShapeArray()) {
     const type = shape.typeC4Shape.text;
+    const { shape: nodeShape, icon } = resolveNodeShape(shape, elementTagMap);
     nodes.push({
       id: shape.alias,
       label: buildNodeLabel(shape),
       isGroup: false,
-      shape: resolveNodeShape(shape, elementTagMap),
+      shape: nodeShape,
+      icon,
       parentId: parentIdOf(shape.parentBoundary),
       padding: shapePadding,
       cssClasses: `c4-shape c4-${type}${isExternal(type) ? ' c4-external' : ''}${

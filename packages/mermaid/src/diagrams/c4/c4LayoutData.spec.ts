@@ -208,6 +208,43 @@ System(s2, "S2", "Desc", $sprite="terminal")
     expect(nodes.find((n) => n.id === 's2')?.shape).toBe('c4-terminal');
   });
 
+  it('renders a non-keyword $sprite as an icon (icon shape + node.icon)', () => {
+    parse(`C4Context
+System(s, "S", "Desc", $sprite="logos:aws-lambda")
+`);
+    const node = data().nodes.find((n) => n.id === 's');
+    expect(node?.shape).toBe('iconRounded');
+    expect(node?.icon).toBe('logos:aws-lambda');
+  });
+
+  it('renders a non-keyword $shape as an icon when $sprite is absent', () => {
+    parse(`C4Context
+System(s, "S", "Desc", $shape="mdi:database")
+`);
+    const node = data().nodes.find((n) => n.id === 's');
+    expect(node?.shape).toBe('iconRounded');
+    expect(node?.icon).toBe('mdi:database');
+  });
+
+  it('keeps a keyword $sprite as a c4 shape (no icon) over a non-keyword $shape', () => {
+    parse(`C4Context
+System(s, "S", "Desc", $sprite="cylinder", $shape="logos:aws-lambda")
+`);
+    const node = data().nodes.find((n) => n.id === 's');
+    // A recognised keyword (in either slot) still maps to its c4 shape.
+    expect(node?.shape).toBe('c4-database');
+    expect(node?.icon).toBeUndefined();
+  });
+
+  it('leaves node.icon undefined for plain elements with no sprite/shape', () => {
+    parse(`C4Context
+System(s, "S")
+`);
+    const node = data().nodes.find((n) => n.id === 's');
+    expect(node?.shape).toBe('rounded');
+    expect(node?.icon).toBeUndefined();
+  });
+
   it('renders Structurizr-style node labels', () => {
     parse(`C4Container
 Container(c1, "API", "Spring Boot", "Handles requests")

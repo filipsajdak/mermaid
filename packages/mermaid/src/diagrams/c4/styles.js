@@ -65,6 +65,14 @@ const getStyles = (options) =>
     rx: 12px;
     ry: 12px;
   }
+  /* $sprite / $shape icon elements render via the unified icon shape: keep the
+     rounded outline in the element identity colour (currentColor) over a light
+     fill so they match the C4 outline look. The icon glyph colour is set inline
+     by the shape from the element's stroke style. */
+  .c4-shape .icon-shape2 {
+    fill: #ffffff;
+    stroke: currentColor;
+  }
 
   /* Drop shadow for elements flagged via UpdateElementStyle($shadowing="true").
      A subtle offset shadow on the element outline, matching c4model.com depth. */
