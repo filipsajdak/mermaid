@@ -85,6 +85,15 @@ UpdateRelStyle(a, b, $textColor="blue", $lineColor="green", $offsetX="5")
     expect(edges[0].labelStyle).toEqual(expect.arrayContaining(['color:blue']));
   });
 
+  it('sets node.link from an element `$link` attribute (clickable element)', () => {
+    // A descr-present form so the named `$link` lands in the parsed slot.
+    parse(`C4Context
+Person(p, "P", "desc", $link="https://example.com")
+`);
+    const { nodes } = data();
+    expect(nodes.find((n) => n.id === 'p')?.link).toBe('https://example.com');
+  });
+
   it('applies the configured C4 palette as an outline (border + text) over a light fill', () => {
     parse(`C4Context
 Person(a, "A")
