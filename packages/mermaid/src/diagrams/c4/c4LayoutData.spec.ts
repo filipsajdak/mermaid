@@ -305,6 +305,33 @@ Rel(b, a, "Returns")
     expect(edges[1].label).toContain('2: Returns');
   });
 
+  it('honours an explicit RelIndex step number in C4Dynamic diagrams', () => {
+    parse(`C4Dynamic
+Person(a, "A")
+System(b, "B")
+RelIndex(3, a, b, "Calls")
+`);
+    const { edges } = data();
+    expect(edges[0].label).toContain('3: Calls');
+  });
+
+  it('mixes explicit RelIndex numbers with auto-numbered plain Rels in C4Dynamic', () => {
+    parse(`C4Dynamic
+Person(a, "A")
+System(b, "B")
+System(c, "C")
+Rel(a, b, "Calls")
+RelIndex(7, b, c, "Forwards")
+Rel(c, a, "Returns")
+`);
+    const { edges } = data();
+    // Plain Rels auto-number (1, then 2); the explicit RelIndex keeps its own 7
+    // and does not consume an auto step.
+    expect(edges[0].label).toContain('1: Calls');
+    expect(edges[1].label).toContain('7: Forwards');
+    expect(edges[2].label).toContain('2: Returns');
+  });
+
   describe('auto-generated legend', () => {
     it('defaults getShowLegend() to false', () => {
       parse(`C4Context

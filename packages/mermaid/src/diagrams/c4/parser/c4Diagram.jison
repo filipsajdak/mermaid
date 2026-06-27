@@ -308,7 +308,7 @@ diagramStatement
     | REL_L attributes {yy.addRel('rel_l', ...$2); $$=$2;}
     | REL_R attributes {yy.addRel('rel_r', ...$2); $$=$2;}
     | REL_B attributes {yy.addRel('rel_b', ...$2); $$=$2;}
-    | REL_INDEX attributes {$2.splice(0, 1); yy.addRel('rel', ...$2); $$=$2;}
+    | REL_INDEX attributes {yy.addRelIndex($2[0], 'rel', ...$2.slice(1)); $$=$2;}
     | UPDATE_EL_STYLE attributes {yy.updateElStyle('update_el_style', ...$2); $$=$2;}
     | UPDATE_BOUNDARY_STYLE attributes {yy.updateBoundaryStyle('update_boundary_style', ...$2); $$=$2;}
     | UPDATE_REL_STYLE attributes {yy.updateRelStyle('update_rel_style', ...$2); $$=$2;}

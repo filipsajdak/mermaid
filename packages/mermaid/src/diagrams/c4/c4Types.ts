@@ -100,6 +100,8 @@ export interface C4Rel {
   tags?: string;
   link?: string;
   wrap?: boolean;
+  /** Explicit step number from `RelIndex(N, ...)`, used by C4Dynamic numbering. */
+  relIndex?: string;
   /* Style fields, set via UpdateRelStyle. */
   textColor?: string;
   lineColor?: string;

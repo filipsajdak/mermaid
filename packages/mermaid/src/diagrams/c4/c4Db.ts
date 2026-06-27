@@ -155,6 +155,36 @@ export const addRel = function (
   rel.wrap = autoWrap();
 };
 
+//index, type, from, to, label, ?techn, ?descr, ?sprite, ?tags, $link
+// Used by RelIndex(N, from, to, ...): adds the relationship like addRel, then
+// records the author-supplied step number N on the rel (`relIndex`). Honoured by
+// the C4Dynamic numbering in getData(); plain Rel(...) keeps auto-numbering.
+export const addRelIndex = function (
+  index: ParserAttribute | null | undefined,
+  type: string | null | undefined,
+  from: string | null | undefined,
+  to: string | null | undefined,
+  label: string | null | undefined,
+  techn?: ParserAttribute | null,
+  descr?: ParserAttribute | null,
+  sprite?: ParserAttribute,
+  tags?: ParserAttribute,
+  link?: ParserAttribute
+) {
+  addRel(type, from, to, label, techn, descr, sprite, tags, link);
+  if (index === undefined || index === null || from === undefined || from === null) {
+    return;
+  }
+  const rel = rels.find((rel) => rel.from === from && rel.to === to);
+  if (rel === undefined) {
+    return;
+  }
+  const value = typeof index === 'object' ? Object.values(index)[0] : index;
+  if (value !== '') {
+    rel.relIndex = value;
+  }
+};
+
 //type, alias, label, ?descr, ?sprite, ?tags, $link
 export const addPersonOrSystem = function (
   typeC4Shape: string,
@@ -911,6 +941,7 @@ export default {
   addDeploymentNode,
   popBoundaryParseStack,
   addRel,
+  addRelIndex,
   addElementTag,
   addRelTag,
   getElementTags,
