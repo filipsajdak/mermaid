@@ -329,3 +329,38 @@ erDiagram
     });
   });
 });
+
+describe('C4 Diagram', () => {
+  ['default', 'forest', 'dark', 'neutral'].forEach((theme) => {
+    describe(theme, () => {
+      it('should render a C4 (legacy) context diagram', () => {
+        imgSnapshotTest(
+          `
+        C4Context
+        title System Context diagram for Internet Banking System
+        Person(customer, "Banking Customer", "A customer of the bank.")
+        System(banking, "Internet Banking System", "Allows customers to view accounts.")
+        System_Ext(email, "E-mail System", "The internal e-mail system.")
+        BiRel(customer, banking, "Uses")
+        Rel(banking, email, "Sends e-mails", "SMTP")
+          `,
+          { theme }
+        );
+      });
+      it('should render a C4 (beta) context diagram', () => {
+        imgSnapshotTest(
+          `
+        c4-beta context
+        title System Context
+        person customer "Banking Customer" "A customer of the bank."
+        softwareSystem banking "Internet Banking System" "Allows customers to view accounts."
+        softwareSystem email "E-mail System" "The internal e-mail system." :::external
+        customer --> banking : "Uses"
+        banking --> email : "Sends e-mails using" "SMTP"
+          `,
+          { theme }
+        );
+      });
+    });
+  });
+});

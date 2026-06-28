@@ -28,31 +28,33 @@ describe('c4-beta detector', () => {
 });
 
 describe('c4-beta styles', () => {
+  const styleOptions = {
+    fontFamily: 'sans-serif',
+    textColor: '#111111',
+    nodeTextColor: '#222222',
+    mainBkg: '#eeeeee',
+    nodeBorder: '#333333',
+    lineColor: '#444444',
+    arrowheadColor: '#555555',
+    edgeLabelBackground: '#dddddd',
+    titleColor: '#666666',
+    c4PersonBkg: '#08427B',
+    c4PersonBorder: '#073B6F',
+    c4SystemBkg: '#1168BD',
+    c4SystemBorder: '#3C7FC0',
+    c4ContainerBkg: '#438DD5',
+    c4ContainerBorder: '#3C7FC0',
+    c4ComponentBkg: '#85BBF0',
+    c4ComponentBorder: '#78A8D8',
+    c4ExternalBkg: '#999999',
+    c4ExternalBorder: '#8A8A8A',
+    c4InfrastructureBkg: '#6b6b6b',
+    c4InfrastructureBorder: '#5a5a5a',
+    c4BoundaryBorder: '#777777',
+  };
+
   it('should emit theme-driven css for nodes, boundaries and relationships', () => {
-    const css = styles({
-      fontFamily: 'sans-serif',
-      textColor: '#111111',
-      nodeTextColor: '#222222',
-      mainBkg: '#eeeeee',
-      nodeBorder: '#333333',
-      lineColor: '#444444',
-      arrowheadColor: '#555555',
-      edgeLabelBackground: '#dddddd',
-      titleColor: '#666666',
-      c4PersonBkg: '#08427B',
-      c4PersonBorder: '#073B6F',
-      c4SystemBkg: '#1168BD',
-      c4SystemBorder: '#3C7FC0',
-      c4ContainerBkg: '#438DD5',
-      c4ContainerBorder: '#3C7FC0',
-      c4ComponentBkg: '#85BBF0',
-      c4ComponentBorder: '#78A8D8',
-      c4ExternalBkg: '#999999',
-      c4ExternalBorder: '#8A8A8A',
-      c4InfrastructureBkg: '#6b6b6b',
-      c4InfrastructureBorder: '#5a5a5a',
-      c4BoundaryBorder: '#777777',
-    });
+    const css = styles(styleOptions);
     expect(css).toContain('.c4-shape');
     expect(css).toContain('.c4-legend text');
     expect(css).toContain('path.c4-rel');
@@ -64,6 +66,22 @@ describe('c4-beta styles', () => {
     expect(css).toContain('#08427B');
     expect(css).toContain('#999999');
     expect(css).toContain('#777777');
+    // Infrastructure nodes are now theme-driven (no hardcoded grey).
+    expect(css).toContain('#6b6b6b');
+  });
+
+  it('does not reference the removed dead c4TextColor variable', () => {
+    const css = styles(styleOptions);
+    expect(css).not.toContain('c4TextColor');
+  });
+
+  it('uses relative, consistent font sizes for the title and legend', () => {
+    const css = styles(styleOptions);
+    // Title scales with the base font; legend matches the legacy 0.85em.
+    expect(css).toContain('font-size: 1.5em');
+    expect(css).toContain('font-size: 0.85em');
+    expect(css).not.toContain('font-size: 18px');
+    expect(css).not.toContain('font-size: 12px');
   });
 });
 
