@@ -70,7 +70,7 @@ const getStyles = (options) =>
      fill so they match the C4 outline look. The icon glyph colour is set inline
      by the shape from the element's stroke style. */
   .c4-shape .icon-shape2 {
-    fill: #ffffff;
+    fill: ${options.background ?? options.mainBkg};
     stroke: currentColor;
   }
 
@@ -84,56 +84,56 @@ const getStyles = (options) =>
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.35));
   }
 
-  /* External elements: the C4 convention renders them in a muted grey (white
-     fill, grey border + grey text) so they read as "outside our scope". This is
-     the fallback identity; an \`external_*_bg_color\` palette key (applied inline
-     by getData) or an explicit element style still overrides it. */
+  /* External elements: the C4 convention renders them in a muted grey (theme
+     fill, grey border + grey text) so they read as "outside our scope". The grey
+     comes from the c4ExternalBkg theme variable; getData also sets it inline per
+     element, and an explicit element style still overrides it. */
   .c4-external rect,
   .c4-external path,
   .c4-external circle,
   .c4-external ellipse,
   .c4-external polygon,
   .c4-external line {
-    fill: #ffffff;
-    stroke: #8c8c8c;
+    fill: ${options.background ?? options.mainBkg};
+    stroke: ${options.c4ExternalBkg};
   }
   .c4-external .label,
   .c4-external .label text,
   .c4-external .label span,
   .c4-external .label p {
-    color: #8c8c8c;
-    fill: #8c8c8c;
+    color: ${options.c4ExternalBkg};
+    fill: ${options.c4ExternalBkg};
   }
 
   /* Relationships: dashed lines with an arrowhead, as on c4model.com. */
   .edgePaths .path,
   path.c4-rel {
-    stroke: ${options.lineColor ?? '#666666'};
+    stroke: ${options.lineColor};
     fill: none;
     stroke-width: 1.5px;
     stroke-dasharray: 6 4;
   }
   .edgePaths .marker {
-    fill: ${options.lineColor ?? '#666666'};
-    stroke: ${options.lineColor ?? '#666666'};
+    fill: ${options.lineColor};
+    stroke: ${options.lineColor};
   }
   /* Relationship labels: smaller, on an opaque background so they stay legible over lines. */
   .edgeLabel {
     font-size: 0.85em;
-    background-color: ${options.background ?? '#ffffff'};
+    background-color: ${options.edgeLabelBackground ?? options.background};
   }
   .edgeLabel .label foreignObject {
     overflow: visible;
   }
   .edgeLabel rect {
-    fill: ${options.background ?? '#ffffff'};
+    fill: ${options.edgeLabelBackground ?? options.background};
     opacity: 1;
   }
 
   /* C4 boundaries are light dashed, mostly-transparent clusters. */
   .cluster rect {
     fill: none;
-    stroke: ${options.nodeBorder};
+    stroke: ${options.c4BoundaryBorder ?? options.nodeBorder};
     stroke-dasharray: 5 5;
     stroke-width: 1px;
     stroke-opacity: 0.6;
