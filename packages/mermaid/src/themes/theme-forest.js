@@ -446,7 +446,7 @@ class Theme {
     this.attributeBackgroundColorEven =
       this.attributeBackgroundColorEven || oldAttributeBackgroundColorEven;
     /* -------------------------------------------------- */
-    /* c4-beta */
+    /* c4 */
     this.c4PersonBkg = this.c4PersonBkg || '#08427B';
     this.c4PersonBorder = this.c4PersonBorder || '#073B6F';
     this.c4SystemBkg = this.c4SystemBkg || '#1168BD';
@@ -457,8 +457,9 @@ class Theme {
     this.c4ComponentBorder = this.c4ComponentBorder || '#78A8D8';
     this.c4ExternalBkg = this.c4ExternalBkg || '#999999';
     this.c4ExternalBorder = this.c4ExternalBorder || '#8A8A8A';
+    this.c4InfrastructureBkg = this.c4InfrastructureBkg || '#6b6b6b';
+    this.c4InfrastructureBorder = this.c4InfrastructureBorder || '#5a5a5a';
     this.c4BoundaryBorder = this.c4BoundaryBorder || '#444444';
-    this.c4TextColor = this.c4TextColor || '#ffffff';
   }
   calculate(overrides) {
     if (typeof overrides !== 'object') {

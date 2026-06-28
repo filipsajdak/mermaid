@@ -49,8 +49,9 @@ describe('c4-beta styles', () => {
       c4ComponentBorder: '#78A8D8',
       c4ExternalBkg: '#999999',
       c4ExternalBorder: '#8A8A8A',
+      c4InfrastructureBkg: '#6b6b6b',
+      c4InfrastructureBorder: '#5a5a5a',
       c4BoundaryBorder: '#777777',
-      c4TextColor: '#fefefe',
     });
     expect(css).toContain('.c4-shape');
     expect(css).toContain('.c4-legend text');

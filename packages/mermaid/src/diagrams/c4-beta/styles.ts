@@ -22,8 +22,9 @@ export interface C4BetaStyleOptions {
   c4ComponentBorder: string;
   c4ExternalBkg: string;
   c4ExternalBorder: string;
+  c4InfrastructureBkg: string;
+  c4InfrastructureBorder: string;
   c4BoundaryBorder: string;
-  c4TextColor: string;
 }
 
 const fade = (color: string, opacity: number) => {
@@ -87,7 +88,7 @@ const getStyles = (options: C4BetaStyleOptions) =>
   .c4-infrastructureNode rect,
   .c4-infrastructureNode path,
   .c4-infrastructureNode circle {
-    stroke: #6b6b6b;
+    stroke: ${options.c4InfrastructureBkg};
   }
   /* Last so it wins over the kind rules for external elements. */
   .c4-external rect,
@@ -124,8 +125,8 @@ const getStyles = (options: C4BetaStyleOptions) =>
   .c4-infrastructureNode .label,
   .c4-infrastructureNode .label text,
   .c4-infrastructureNode .label span {
-    fill: #6b6b6b;
-    color: #6b6b6b;
+    fill: ${options.c4InfrastructureBkg};
+    color: ${options.c4InfrastructureBkg};
   }
   /* Last so it wins over the kind rules for external elements. */
   .c4-external .label,
