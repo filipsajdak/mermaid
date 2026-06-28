@@ -3,9 +3,11 @@ import intersect from '../intersect/index.js';
 import type { Node } from '../../types.js';
 import { styles2String } from './handDrawnShapeStyles.js';
 import type { D3Selection } from '../../../types.js';
-
-const accentColor = (nodeStyles: string): string =>
-  /stroke:\s*([^;]+)/.exec(nodeStyles)?.[1]?.trim() ?? 'currentColor';
+import {
+  C4_TERMINAL_GLYPH_FONT_FAMILY,
+  C4_TERMINAL_GLYPH_FONT_WEIGHT,
+  C4_TERMINAL_GLYPH_FONT_SIZE,
+} from './c4ShapeConstants.js';
 
 /** C4 terminal shape: a rounded box with a console prompt glyph, for server-side apps. */
 export async function c4Terminal<T extends SVGGraphicsElement>(parent: D3Selection<T>, node: Node) {
@@ -32,6 +34,7 @@ export async function c4Terminal<T extends SVGGraphicsElement>(parent: D3Selecti
     .attr('ry', 12)
     .attr('style', nodeStyles);
 
+  const accent = node.c4Accent ?? 'currentColor';
   group
     .append('text')
     .attr('x', -w / 2 + 12)
@@ -39,7 +42,7 @@ export async function c4Terminal<T extends SVGGraphicsElement>(parent: D3Selecti
     .attr('class', 'c4-terminal-glyph')
     .attr(
       'style',
-      `font-family:monospace;font-weight:bold;font-size:14px;fill:${accentColor(nodeStyles)}`
+      `font-family:${C4_TERMINAL_GLYPH_FONT_FAMILY};font-weight:${C4_TERMINAL_GLYPH_FONT_WEIGHT};font-size:${C4_TERMINAL_GLYPH_FONT_SIZE};fill:${accent}`
     )
     .text('>_');
 

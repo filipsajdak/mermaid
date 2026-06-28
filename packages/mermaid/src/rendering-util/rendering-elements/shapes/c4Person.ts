@@ -3,6 +3,7 @@ import intersect from '../intersect/index.js';
 import type { Node } from '../../types.js';
 import { styles2String } from './handDrawnShapeStyles.js';
 import type { D3Selection } from '../../../types.js';
+import { C4_PERSON_ARM_OPACITY, C4_PERSON_ARM_STROKE_WIDTH } from './c4ShapeConstants.js';
 
 /**
  * C4 person shape: a circular head above a rounded-rectangle body with two
@@ -41,9 +42,9 @@ export async function c4Person<T extends SVGGraphicsElement>(parent: D3Selection
     .attr('ry', bodyRadius)
     .attr('style', `${nodeStyles};rx:${bodyRadius}px;ry:${bodyRadius}px`);
 
-  // Two arms in the lower body, the text color at 40% opacity, sitting below
-  // the text and reaching the body bottom.
-  const accent = /stroke:\s*([^;]+)/.exec(nodeStyles)?.[1]?.trim() ?? 'currentColor';
+  // Two arms in the lower body, the identity colour at reduced opacity, sitting
+  // below the text and reaching the body bottom.
+  const accent = node.c4Accent ?? 'currentColor';
   const armX = w * 0.29;
   const armTop = bodyTop + bodyHeight * 0.5;
   const armBottom = bodyTop + bodyHeight * 0.98;
@@ -54,7 +55,10 @@ export async function c4Person<T extends SVGGraphicsElement>(parent: D3Selection
       .attr('y1', armTop)
       .attr('x2', x)
       .attr('y2', armBottom)
-      .attr('style', `stroke:${accent};stroke-opacity:0.4;stroke-width:2px`);
+      .attr(
+        'style',
+        `stroke:${accent};stroke-opacity:${C4_PERSON_ARM_OPACITY};stroke-width:${C4_PERSON_ARM_STROKE_WIDTH}px`
+      );
   }
 
   group

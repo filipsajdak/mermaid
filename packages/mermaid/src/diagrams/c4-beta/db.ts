@@ -3,6 +3,7 @@ import type { DiagramDB } from '../../diagram-api/types.js';
 import { log } from '../../logger.js';
 import type { Edge, LayoutData, Node } from '../../rendering-util/types.js';
 import { keywordShape } from '../c4/c4ShapeVocabulary.js';
+import { resolveIdentity } from '../c4/c4Palette.js';
 import {
   buildElementLabel as buildSharedElementLabel,
   buildRelationshipLabel as buildSharedRelationshipLabel,
@@ -296,6 +297,12 @@ export class C4BetaDB implements DiagramDB {
       // styles are emitted inline, so they win over the class-based defaults.
       const cssStyles: string[] = [];
       let shape: Node['shape'] = element.kind === 'person' ? 'c4-person' : 'rect';
+      // Identity colour for decorative shape parts (e.g. the c4-person arms): the
+      // theme variable for this kind, or the shared grey for external. A tag's
+      // explicit stroke override (below) wins so the decoration matches the rect.
+      let accent = isExternal
+        ? resolveIdentity('external', config.themeVariables)
+        : resolveIdentity(element.kind, config.themeVariables);
       // Tag styles are emitted inline so they override the themed class colors.
       // A user `style external fill:#...` therefore beats the default `.c4-external` rule.
       for (const tag of element.tags) {
@@ -308,6 +315,9 @@ export class C4BetaDB implements DiagramDB {
           if (style[key]) {
             cssStyles.push(`${key}: ${style[key]}`);
           }
+        }
+        if (style.stroke) {
+          accent = style.stroke;
         }
         if (style.shape) {
           // Resolve the keyword through the shared C4 shape vocabulary so c4-beta
@@ -323,6 +333,7 @@ export class C4BetaDB implements DiagramDB {
         shape,
         cssClasses: cssClasses.join(' '),
         cssStyles,
+        c4Accent: accent,
         padding: 8,
         look: config.look,
       });

@@ -65,6 +65,10 @@ interface BaseNode {
   borderStyle?: string;
   borderWidth?: number;
   labelTextColor?: string;
+  // C4 identity (outline) colour, set at the data layer so decorative C4 shape
+  // parts (person arms, terminal glyph, browser chrome) colour themselves
+  // without re-parsing the serialized node style string.
+  c4Accent?: string;
   labelPaddingX?: number;
   labelPaddingY?: number;
 

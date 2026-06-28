@@ -3,9 +3,11 @@ import intersect from '../intersect/index.js';
 import type { Node } from '../../types.js';
 import { styles2String } from './handDrawnShapeStyles.js';
 import type { D3Selection } from '../../../types.js';
-
-const accentColor = (nodeStyles: string): string =>
-  /stroke:\s*([^;]+)/.exec(nodeStyles)?.[1]?.trim() ?? 'currentColor';
+import {
+  C4_BROWSER_TRAFFIC_RADIUS,
+  C4_BROWSER_ADDRESS_BAR_STROKE_WIDTH,
+  C4_BROWSER_ADDRESS_BAR_OPACITY,
+} from './c4ShapeConstants.js';
 
 /** C4 browser shape: a rounded box with a window chrome bar, for single-page applications. */
 export async function c4Browser<T extends SVGGraphicsElement>(parent: D3Selection<T>, node: Node) {
@@ -19,7 +21,7 @@ export async function c4Browser<T extends SVGGraphicsElement>(parent: D3Selectio
   const w = Math.max(bbox.width + padding * 2, 90);
   const h = bbox.height + padding * 2 + barHeight;
   const top = -h / 2;
-  const accent = accentColor(nodeStyles);
+  const accent = node.c4Accent ?? 'currentColor';
 
   const group = shapeSvg.insert('g', ':first-child').attr('class', 'basic label-container');
 
@@ -46,7 +48,7 @@ export async function c4Browser<T extends SVGGraphicsElement>(parent: D3Selectio
       .append('circle')
       .attr('cx', -w / 2 + 12 + i * 9)
       .attr('cy', top + barHeight / 2)
-      .attr('r', 2.5)
+      .attr('r', C4_BROWSER_TRAFFIC_RADIUS)
       .attr('style', `fill:${accent};stroke:none`);
   }
 
@@ -60,7 +62,10 @@ export async function c4Browser<T extends SVGGraphicsElement>(parent: D3Selectio
     .attr('height', barHeight - 8)
     .attr('rx', 3)
     .attr('ry', 3)
-    .attr('style', `fill:none;stroke:${accent};stroke-width:1px;opacity:0.6`);
+    .attr(
+      'style',
+      `fill:none;stroke:${accent};stroke-width:${C4_BROWSER_ADDRESS_BAR_STROKE_WIDTH}px;opacity:${C4_BROWSER_ADDRESS_BAR_OPACITY}`
+    );
 
   updateNodeBounds(node, group);
 

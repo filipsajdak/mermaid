@@ -374,6 +374,9 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
         ...elementTagStyles(shape.tags, elementTagMap),
         ...elementCssStyles(shape),
       ],
+      // Explicit identity colour for decorative shape parts (person arms, terminal
+      // glyph, browser chrome) so they need not re-parse the serialized style.
+      c4Accent: identityColor(type, config.themeVariables),
       link: shape.link,
       look: config.look,
     });
