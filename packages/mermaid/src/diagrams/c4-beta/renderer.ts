@@ -7,6 +7,7 @@ import { setupViewPortForSVG } from '../../rendering-util/setupViewPortForSVG.js
 import utils from '../../utils.js';
 import type { C4BetaDB } from './db.js';
 import { insertLegend } from '../c4/c4Legend.js';
+import { resolveIdentity } from '../c4/c4Palette.js';
 
 const draw: DrawDefinition = async function (_text, id, _version, diag) {
   log.debug('Drawing c4-beta diagram', id);
@@ -39,9 +40,16 @@ const draw: DrawDefinition = async function (_text, id, _version, diag) {
 
   if (db.isLegendEnabled()) {
     // Map c4-beta legend items onto the shared C4LegendItem shape (outline colour).
-    const legendItems = db
-      .getLegendItems()
-      .map((i) => ({ label: i.label, color: i.stroke ?? i.fill ?? '#6b6b6b' }));
+    // Element-kind rows resolve their colour from the active theme so the legend
+    // swatches match the rendered elements; tag rows keep their explicit colour.
+    const themeVariables = getConfig().themeVariables;
+    const legendItems = db.getLegendItems().map((i) => ({
+      label: i.label,
+      color:
+        i.stroke ??
+        i.fill ??
+        resolveIdentity(i.external ? 'external' : (i.kind ?? ''), themeVariables),
+    }));
     insertLegend(svg, legendItems, getConfig());
   }
 

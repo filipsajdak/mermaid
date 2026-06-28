@@ -539,13 +539,13 @@ describe('c4-beta db', () => {
 
     it('should derive one outline entry per element kind used', async () => {
       await populate(exampleDiagram);
-      // Outline swatches carry only the identity colour on the stroke (no fill),
-      // matching the white-box-with-coloured-outline elements.
+      // Kind rows carry the kind only; the renderer resolves the swatch colour
+      // from the theme so it always matches the rendered elements.
       expect(db.getLegendItems()).toEqual([
-        { label: 'person', stroke: '#08427B' },
-        { label: 'softwareSystem', stroke: '#1168BD' },
-        { label: 'external softwareSystem', stroke: '#999999' },
-        { label: 'container', stroke: '#438DD5' },
+        { label: 'person', kind: 'person', external: false },
+        { label: 'softwareSystem', kind: 'softwareSystem', external: false },
+        { label: 'external softwareSystem', kind: 'softwareSystem', external: true },
+        { label: 'container', kind: 'container', external: false },
       ]);
     });
 
@@ -557,7 +557,9 @@ describe('c4-beta db', () => {
         }
         group team "Team"
       `);
-      expect(db.getLegendItems()).toEqual([{ label: 'container', stroke: '#438DD5' }]);
+      expect(db.getLegendItems()).toEqual([
+        { label: 'container', kind: 'container', external: false },
+      ]);
     });
 
     it('should add one entry per user-defined style tag', async () => {
@@ -567,7 +569,7 @@ describe('c4-beta db', () => {
         softwareSystem a "A" :::team-a
       `);
       expect(db.getLegendItems()).toEqual([
-        { label: 'softwareSystem', stroke: '#1168BD' },
+        { label: 'softwareSystem', kind: 'softwareSystem', external: false },
         { label: 'team-a', fill: '#1F2937', stroke: '#111827' },
         { label: 'async', fill: undefined, stroke: '#0a0' },
       ]);

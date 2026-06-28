@@ -29,21 +29,16 @@ import type {
   C4LinePattern,
 } from './types.js';
 
-// Identity colour per element kind: the C4 OUTLINE border + label colour applied
-// through the theme-driven class rules in styles.ts, reused here for the legend
-// swatch. These match the default-theme c4*Bkg values so the legend stays in sync
-// with the rendered elements.
-const ELEMENT_IDENTITY: Partial<Record<C4ElementKind, string>> = {
-  person: '#08427B',
-  softwareSystem: '#1168BD',
-  container: '#438DD5',
-  component: '#85BBF0',
-  infrastructureNode: '#6b6b6b',
-};
-
-// `external` is a convention tag rather than a kind; it gets the shared grey
-// identity, matching the .c4-external rule in styles.ts.
-const EXTERNAL_IDENTITY = '#999999';
+// Element kinds that get a legend swatch (those with a theme identity colour).
+// Groups and deployment nodes render as unfilled boundaries, so they are
+// omitted. The swatch colour itself is resolved from the theme at render time.
+const LEGEND_KINDS = new Set<C4ElementKind>([
+  'person',
+  'softwareSystem',
+  'container',
+  'component',
+  'infrastructureNode',
+]);
 
 // Human-readable C4 type names rendered as the element stereotype label.
 // `group` has no stereotype: it is a plain boundary, not a C4 type.
@@ -114,12 +109,9 @@ export const buildLegendItems = (
   const items: C4BetaLegendItem[] = [];
   const seenLabels = new Set<string>();
   for (const element of elements) {
-    // Groups and deployment nodes render as unfilled boundaries; they carry no
-    // identity colour, so they are left out of the legend. `external` is a
-    // convention tag; external elements get the shared grey identity.
+    // `external` is a convention tag; external elements share the grey identity.
     const isExternal = element.tags.includes('external');
-    const identity = isExternal ? EXTERNAL_IDENTITY : ELEMENT_IDENTITY[element.kind];
-    if (!identity) {
+    if (!LEGEND_KINDS.has(element.kind)) {
       continue;
     }
     const label = isExternal ? `external ${element.kind}` : element.kind;
@@ -127,9 +119,9 @@ export const buildLegendItems = (
       continue;
     }
     seenLabels.add(label);
-    // Outline swatch: identity colour on the border, no fill, matching the
-    // white-box-with-coloured-outline elements.
-    items.push({ label, stroke: identity });
+    // Carry the kind only; the renderer resolves the outline swatch colour from
+    // the active theme so the legend matches the rendered elements.
+    items.push({ label, kind: element.kind, external: isExternal });
   }
   for (const [tag, style] of styles) {
     items.push({ label: tag, fill: style.fill, stroke: style.stroke ?? style.fill });
