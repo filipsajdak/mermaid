@@ -1,4 +1,3 @@
-import { hsl } from 'd3';
 import type { MermaidConfig } from '../../config.type.js';
 import type { Edge, LayoutData, Node } from '../../rendering-util/types.js';
 import {
@@ -9,6 +8,7 @@ import {
   keywordShape,
   type ResolvedShape,
 } from './c4ShapeVocabulary.js';
+import { resolveIdentity } from './c4Palette.js';
 import {
   buildBoundaryLabel as buildSharedBoundaryLabel,
   buildElementLabel,
@@ -278,41 +278,43 @@ const relTagStyles = (
   return { style, labelStyle };
 };
 
-// Clamp a palette color dark enough to read as text/border on a light fill.
-const ensureReadable = (color: string): string => {
-  const c = hsl(color);
-  if (Number.isNaN(c.l)) {
-    return color;
+// Collapse a legacy C4 element type (person, external_system, system_db, code,
+// system_instance, ...) to the canonical kind whose theme variable carries its
+// identity colour.
+const legacyKind = (typeC4Shape: string): string => {
+  if (isExternal(typeC4Shape)) {
+    return 'external';
   }
-  c.l = Math.min(c.l, 0.42);
-  return c.formatHex();
+  const base = paletteKey(typeC4Shape).replace(/_(db|queue)$/, '');
+  if (base === 'infrastructure_node') {
+    return 'infrastructureNode';
+  }
+  // Level 4 (Code) elements have no identity of their own; they borrow the
+  // component colour (a code box reads as a fine-grained component).
+  if (base === 'code') {
+    return 'component';
+  }
+  return base;
 };
 
-// Neutral identity color used when a kind has no palette entry (e.g. deployment
-// nodes) or its `<type>_bg_color` is unset.
-const DEFAULT_IDENTITY = '#6b6b6b';
-
-// Outline identity color for an element type: the readable palette color used as
+// Outline identity color for an element type: the theme-driven colour used as
 // border + text. Mirrors configColorStyles' stroke/text choice.
-const identityColor = (typeC4Shape: string, c4Config: Record<string, any>): string => {
-  const bg = c4Config[`${paletteKey(typeC4Shape)}_bg_color`];
-  return typeof bg === 'string' ? ensureReadable(bg) : DEFAULT_IDENTITY;
-};
+const identityColor = (
+  typeC4Shape: string,
+  themeVariables: MermaidConfig['themeVariables']
+): string => resolveIdentity(legacyKind(typeC4Shape), themeVariables);
 
 /**
- * Outline styling for an element type: the c4 palette color becomes the border
- * and text (the element's identity), over a light fill, as on c4model.com.
+ * Outline styling for an element type: the theme identity colour becomes the
+ * border and text (the element's identity), over the theme background fill, as on
+ * c4model.com. Colour is sourced from theme variables only (see c4Palette).
  */
 const configColorStyles = (
   typeC4Shape: string,
-  c4Config: Record<string, any>,
+  themeVariables: MermaidConfig['themeVariables'],
   background: string
 ): string[] => {
-  // White fill with the element's identity colour as border + text. A type without a
-  // configured `<type>_bg_color` (e.g. InfrastructureNode) falls back to the neutral
-  // DEFAULT_IDENTITY grey - matching its legend swatch - rather than inheriting the
-  // theme's default node border.
-  const identity = identityColor(typeC4Shape, c4Config);
+  const identity = identityColor(typeC4Shape, themeVariables);
   return [`fill:${background}`, `stroke:${identity}`, `color:${identity}`];
 };
 
@@ -368,7 +370,7 @@ export const getData = (db: C4Db, config: MermaidConfig): LayoutData => {
         hasShadow(shape.shadowing) ? ' c4-shadow' : ''
       }`,
       cssStyles: [
-        ...configColorStyles(type, c4Config, background),
+        ...configColorStyles(type, config.themeVariables, background),
         ...elementTagStyles(shape.tags, elementTagMap),
         ...elementCssStyles(shape),
       ],
@@ -476,7 +478,6 @@ const legendCategory = (typeC4Shape: string): { key: string; label: string } => 
  * legend is deterministic regardless of declaration order.
  */
 export const buildLegendData = (db: C4Db, config: MermaidConfig): C4LegendItem[] => {
-  const c4Config: Record<string, any> = config.c4 ?? {};
   const seen = new Map<string, C4LegendItem & { order: number }>();
   // Custom legend rows contributed by an element's `UpdateElementStyle($legendText)`.
   // De-duped by text and ordered after the kind rows (1000+ keeps them last).
@@ -491,7 +492,7 @@ export const buildLegendData = (db: C4Db, config: MermaidConfig): C4LegendItem[]
       if (!custom.has(shape.legendText)) {
         custom.set(shape.legendText, {
           label: shape.legendText,
-          color: identityColor(type, c4Config),
+          color: identityColor(type, config.themeVariables),
           order: 1000 + customOrder++,
         });
       }
@@ -501,14 +502,18 @@ export const buildLegendData = (db: C4Db, config: MermaidConfig): C4LegendItem[]
     if (seen.has(key)) {
       continue;
     }
-    seen.set(key, { label, color: identityColor(type, c4Config), order: LEGEND_ORDER[key] ?? 99 });
+    seen.set(key, {
+      label,
+      color: identityColor(type, config.themeVariables),
+      order: LEGEND_ORDER[key] ?? 99,
+    });
   }
 
   const hasDeploymentNode = db.getBoundaries().some((boundary) => boundary.nodeType !== undefined);
   if (hasDeploymentNode && !seen.has('deploymentNode')) {
     seen.set('deploymentNode', {
       label: 'Deployment Node',
-      color: DEFAULT_IDENTITY,
+      color: resolveIdentity('infrastructureNode', config.themeVariables),
       order: LEGEND_ORDER.deploymentNode,
     });
   }

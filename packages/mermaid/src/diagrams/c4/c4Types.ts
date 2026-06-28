@@ -154,8 +154,8 @@ export interface C4Font {
 /**
  * The C4 configuration at render time: all defaults are applied and the
  * `*Font()` helper functions from the default config are present.
- * Additional dynamically accessed keys (e.g. `person_bg_color`,
- * `external_systemFont`) are covered by the `Record<string, unknown>` part.
+ * Additional dynamically accessed keys (e.g. `external_systemFont`,
+ * `personFont`) are covered by the `Record<string, unknown>` part.
  */
 export type C4DrawConfig = Omit<
   Required<C4DiagramConfig>,

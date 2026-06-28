@@ -120,22 +120,26 @@ UpdateBoundaryStyle(b0, $bgColor="#445566", $fontColor="#ffffff", $borderColor="
     );
   });
 
-  it('applies the configured C4 palette as an outline (border + text) over a light fill', () => {
+  it('applies the theme palette as an outline (border + text) over the theme fill', () => {
     parse(`C4Context
 Person(a, "A")
 System_Ext(b, "B")
 `);
     const { nodes } = getData(c4Db, {
-      c4: { person_bg_color: '#08427B', external_system_bg_color: '#999999' },
-    } as MermaidConfig);
-    // #08427B is already dark, so it is used verbatim as border and text.
+      themeVariables: {
+        background: '#ffffff',
+        c4PersonBkg: '#08427B',
+        c4ExternalBkg: '#999999',
+      },
+    } as unknown as MermaidConfig);
+    // The person's identity colour comes straight from the theme variable.
     expect(nodes.find((n) => n.id === 'a')?.cssStyles).toEqual(
-      expect.arrayContaining(['fill:#ffffff', 'stroke:#08427b', 'color:#08427b'])
+      expect.arrayContaining(['fill:#ffffff', 'stroke:#08427B', 'color:#08427B'])
     );
-    // #999999 is too light for text on white, so it is darkened for legibility.
-    const ext = nodes.find((n) => n.id === 'b')?.cssStyles ?? [];
-    expect(ext).toContain('fill:#ffffff');
-    expect(ext.some((s) => /^stroke:#[\da-f]{6}$/.test(s) && s !== 'stroke:#999999')).toBe(true);
+    // Every external element shares the single grey, also from the theme.
+    expect(nodes.find((n) => n.id === 'b')?.cssStyles).toEqual(
+      expect.arrayContaining(['fill:#ffffff', 'stroke:#999999', 'color:#999999'])
+    );
   });
 
   it('applies a defined AddElementTag colors to a tagged element', () => {
@@ -443,17 +447,17 @@ ContainerQueue(q, "Events", "Kafka")
       ]);
     });
 
-    it('deduplicates repeated kinds and carries the palette outline color', () => {
+    it('deduplicates repeated kinds and carries the theme outline color', () => {
       parse(`C4Context
 Person(a, "A")
 Person(b, "B")
 System(s, "S")
 `);
       const items = buildLegendData(c4Db, {
-        c4: { person_bg_color: '#08427B' },
-      } as MermaidConfig);
+        themeVariables: { c4PersonBkg: '#08427B' },
+      } as unknown as MermaidConfig);
       expect(items).toHaveLength(2);
-      expect(items[0]).toEqual({ label: 'Person', color: '#08427b' });
+      expect(items[0]).toEqual({ label: 'Person', color: '#08427B' });
     });
 
     it('adds a Deployment Node row when the diagram uses one', () => {
@@ -526,20 +530,21 @@ Rel(svc, repo, "Loads and saves orders", "JDBC")
       expect(edges[0].label).toContain('JDBC');
     });
 
-    it('gives Code elements their own palette identity color and legend row', () => {
+    it('renders Code elements with the component identity color and a Code legend row', () => {
       parse(`C4Code
 Code(svc, "OrderService", "class")
 `);
-      const node = getData(c4Db, {
-        c4: { code_bg_color: '#0b3d6f' },
-      } as MermaidConfig).nodes.find((n) => n.id === 'svc');
-      // The configured code color becomes the outline (border + text) over a light fill.
+      const themeVariables = { background: '#ffffff', c4ComponentBkg: '#85BBF0' };
+      const node = getData(c4Db, { themeVariables } as unknown as MermaidConfig).nodes.find(
+        (n) => n.id === 'svc'
+      );
+      // Code (Level 4) borrows the component identity colour as its outline.
       expect(node?.cssStyles).toEqual(
-        expect.arrayContaining(['fill:#ffffff', 'stroke:#0b3d6f', 'color:#0b3d6f'])
+        expect.arrayContaining(['fill:#ffffff', 'stroke:#85BBF0', 'color:#85BBF0'])
       );
       const labels = buildLegendData(c4Db, {
-        c4: { code_bg_color: '#0b3d6f' },
-      } as MermaidConfig).map((i) => i.label);
+        themeVariables,
+      } as unknown as MermaidConfig).map((i) => i.label);
       expect(labels).toContain('Code');
     });
   });
