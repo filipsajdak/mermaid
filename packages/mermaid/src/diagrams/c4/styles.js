@@ -151,7 +151,7 @@ const getStyles = (options) =>
 
   .c4TitleText {
     text-anchor: middle;
-    font-size: 18px;
+    font-size: 1.5em;
     fill: ${options.textColor};
     font-family: ${options.fontFamily};
   }

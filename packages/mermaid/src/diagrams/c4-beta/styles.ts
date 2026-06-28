@@ -194,13 +194,13 @@ const getStyles = (options: C4BetaStyleOptions) =>
 
   .c4-legend text {
     font-family: ${options.fontFamily};
-    font-size: 12px;
+    font-size: 0.85em;
     fill: ${options.textColor};
   }
 
   .c4TitleText {
     text-anchor: middle;
-    font-size: 18px;
+    font-size: 1.5em;
     fill: ${options.textColor};
   }
 `;
