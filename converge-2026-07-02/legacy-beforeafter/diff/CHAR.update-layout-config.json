@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.update-layout-config",
+  "changed": 40655,
+  "total": 887040,
+  "pct": 4.583220598845599,
+  "baseSize": [
+    1440,
+    616
+  ],
+  "workSize": [
+    1440,
+    220
+  ],
+  "identical": false
+}

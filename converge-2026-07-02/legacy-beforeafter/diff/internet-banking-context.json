@@ -1,0 +1,15 @@
+{
+  "name": "internet-banking-context",
+  "changed": 231983,
+  "total": 1474560,
+  "pct": 15.732354058159723,
+  "baseSize": [
+    1440,
+    1024
+  ],
+  "workSize": [
+    1440,
+    972
+  ],
+  "identical": false
+}

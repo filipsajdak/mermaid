@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>C4 converged - visual proof</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:32px;max-width:900px;line-height:1.5;color:#222}
+  h1{font-size:22px} h2{font-size:17px;margin-top:28px}
+  a{color:#0969da} code{background:#f0f0f0;padding:1px 5px;border-radius:4px;font-size:90%}
+  .note{color:#555;font-size:14px}
+</style></head>
+<body>
+<h1>C4 for mermaid - converged end-state (visual proof)</h1>
+<p class="note">Argos-free local render galleries. base = <code>upstream/develop @0d1ee0a84</code>,
+work = <code>feature/c4-converge @006352830</code> (the local integration showing the end-state both
+syntaxes converge on). Not a PR itself; the per-slice PRs are what get pushed.</p>
+
+<h2>1. Legacy C4 - before / after (the migration)</h2>
+<p>The existing <code>C4Context</code>/<code>C4Container</code>/... syntax, rendered on today's
+<code>develop</code> (before: solid boxes, <code>&lt;&lt;stereotype&gt;&gt;</code>) vs the converged
+outline language (after: white-fill/coloured-border, <code>[Stereotype]</code>, dashed relationships,
+dedicated person/database/queue shapes, internal-blue/external-grey). 25 tiles, all changed 2.4-15.7%.</p>
+<p><a href="legacy-beforeafter/index.html">-> Legacy before/after gallery (25 tiles)</a>
+&nbsp;|&nbsp; <a href="legacy-beforeafter/summary.md">summary.md</a></p>
+
+<h2>2. c4-beta - the new structurizr-style syntax</h2>
+<p>The new <code>c4-beta</code> syntax renders in the <em>same</em> converged visual language
+(shared shapes, labels, auto-legend, stereotypes). c4-beta does not exist on <code>develop</code>,
+so this is a standalone showcase, not a diff.</p>
+<p><a href="beta-showcase/index.html">-> c4-beta showcase (5 diagrams)</a></p>
+
+<h2>What this demonstrates</h2>
+<ul>
+<li>Legacy C4 is <strong>migrated in place</strong> to the unified renderer (replacement, not opt-in).</li>
+<li>Both syntaxes <strong>converge on one visual language</strong> (RFC #7844) and share code
+(<code>c4ShapeVocabulary</code>, <code>c4Labels</code>, <code>c4Legend</code>, <code>c4Palette</code>).</li>
+<li>Colours are <strong>theme-driven</strong> (legible across default/dark/forest/neutral).</li>
+</ul>
+</body></html>

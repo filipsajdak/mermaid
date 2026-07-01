@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.boundary-generic",
+  "changed": 22498,
+  "total": 869760,
+  "pct": 2.5866905813097865,
+  "baseSize": [
+    1440,
+    604
+  ],
+  "workSize": [
+    1440,
+    354
+  ],
+  "identical": false
+}
