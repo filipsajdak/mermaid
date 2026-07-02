@@ -2,7 +2,7 @@
 
 > A C4 diagram describes a software system at different zoom levels: System Context, Container, Component, Dynamic and Deployment, following the [C4 model](https://c4model.com/).
 
-The `c4-beta` diagram type is a new, experimental take on C4 diagrams with a compact, Structurizr-inspired syntax. It replaces the PlantUML-compatible syntax of the [legacy C4 diagram](c4.md) and is rendered through the unified layout pipeline.
+The `c4-beta` diagram type is a new, experimental take on C4 diagrams with a compact, Structurizr-inspired syntax, rendered through the unified layout pipeline. It is an alternative to the PlantUML-compatible syntax of the [C4 diagram](c4.md): both syntaxes render in the same visual language - use this one for greenfield diagrams, and the PlantUML-compatible one when migrating existing C4-PlantUML sources.
 
 ```warning
 This is an experimental diagram. The syntax may change in future releases.
@@ -30,10 +30,10 @@ email --> customer : "Sends e-mails to"
 A diagram starts with the `c4-beta` keyword followed by an optional diagram kind:
 
 ```
-c4-beta context | container | component | dynamic | deployment
+c4-beta landscape | context | container | component | dynamic | deployment
 ```
 
-The kind defaults to `context`. The kind is advisory: every element renders in every kind, but mermaid logs a warning when an element is unexpected for the declared kind (for example a `component` in a `context` diagram).
+The kind defaults to `context`. A `landscape` diagram is a wider-scope context view (a [System Landscape](https://c4model.com/diagrams/system-landscape)) showing people and software systems across several systems' boundaries. The kind is advisory: every element renders in every kind, but mermaid logs a warning when an element is unexpected for the declared kind (for example a `component` in a `context` diagram).
 
 ### Elements
 
@@ -44,6 +44,16 @@ person|softwareSystem|container|component|group|deploymentNode|infrastructureNod
 - `:::external` is a built-in convention tag that marks an element as outside the system under discussion. It renders the element in grey by default; override the look with a `style external ...` statement (see [Tags and styling](#tags-and-styling)).
 - `"Technology"` can only be given when a `"Description"` is present (use `""` for an empty description).
 - `person` elements render with the classic C4 person notation (head and body).
+
+The positional string slots per element kind (note the difference from
+Structurizr DSL, where the third slot on `person`/`softwareSystem` is _tags_ -
+here tags are always written as `:::tag` markers):
+
+| Kind                                           | Slot 1 | Slot 2      | Slot 3                                   |
+| ---------------------------------------------- | ------ | ----------- | ---------------------------------------- |
+| `person`, `softwareSystem`, `group`            | Name   | Description | - (technology is ignored with a warning) |
+| `container`, `component`, `infrastructureNode` | Name   | Description | Technology                               |
+| `deploymentNode`                               | Name   | Description | Technology                               |
 
 ```mermaid-example
 c4-beta container
@@ -70,6 +80,23 @@ softwareSystem banking "Internet Banking System" {
 customer --> spa : "Views account balances using" "HTTPS"
 spa --> api : "Makes API calls to" "JSON/HTTPS"
 api --> db : "Reads from and writes to" "SQL/TCP"
+```
+
+### Groups
+
+A `group` is a plain named boundary with no C4 stereotype - use it to draw an
+organisational or team grouping around elements without implying a software
+system boundary. Like any element, it nests with braces:
+
+```mermaid-example
+c4-beta context
+group team "Payments Team" {
+    softwareSystem payments "Payments System"
+    softwareSystem ledger "Ledger"
+}
+person customer "Customer"
+
+customer --> payments : "Pays with"
 ```
 
 ### Relationships
@@ -267,7 +294,7 @@ c4-beta context
 legend off
 
 person user "User"
-system core "Core System"
+softwareSystem core "Core System"
 
 user --> core : "Uses"
 ```
@@ -295,3 +322,20 @@ A `title` line sets the diagram title:
 ```
 title Internet Banking System - System Context
 ```
+
+### Differences from Structurizr DSL
+
+The syntax is Structurizr-inspired, not Structurizr-compatible. The main
+differences to be aware of when porting:
+
+- **No model/views split**: each mermaid diagram is a single self-contained
+  view; there is no shared workspace model rendered into multiple views.
+- **Tags are `:::tag` markers**, not a positional string slot - in Structurizr
+  DSL the third string on `person`/`softwareSystem` is tags; here that slot
+  does not exist (see the slot table above).
+- **Instances live on `deploymentNode`** (`instances "4"`), not on separate
+  `softwareSystemInstance`/`containerInstance` keywords.
+- **Flat identifiers**: ids are global to the diagram (no hierarchical
+  `a.b.c` references), so give nested elements unique ids.
+- Structurizr's filtered views, perspectives and workspace-level features have
+  no equivalent.
