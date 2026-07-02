@@ -112,14 +112,19 @@ async function renderOne(
 
     const box = await page.locator('#output').boundingBox();
     if (box && box.width > 0 && box.height > 0) {
+      const clipW = Math.ceil(box.x + box.width + CLIP_PADDING);
+      const clipH = Math.ceil(box.y + box.height + CLIP_PADDING);
+      // A non-fullPage screenshot is clamped to the viewport, so tall diagrams get
+      // cropped at the bottom. Grow the viewport to the content before capturing.
+      if (clipH > VIEWPORT.height || clipW > VIEWPORT.width) {
+        await page.setViewportSize({
+          width: Math.max(VIEWPORT.width, clipW),
+          height: Math.max(VIEWPORT.height, clipH),
+        });
+      }
       await page.screenshot({
         path: outPath,
-        clip: {
-          x: 0,
-          y: 0,
-          width: Math.ceil(box.x + box.width + CLIP_PADDING),
-          height: Math.ceil(box.y + box.height + CLIP_PADDING),
-        },
+        clip: { x: 0, y: 0, width: clipW, height: clipH },
       });
     } else {
       // Nothing rendered (likely an error) - capture the page so the tile shows the failure.
