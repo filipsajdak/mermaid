@@ -141,7 +141,7 @@ System_Ext(b, "B")
       expect.arrayContaining(['fill:#ffffff', 'stroke:#999999', 'color:#999999'])
     );
     // The identity colour is also exposed as c4Accent so decorative shape parts
-    // (person arms etc.) need not re-parse the serialized style string.
+    // (terminal glyph, browser chrome) need not re-parse the serialized style string.
     expect(nodes.find((n) => n.id === 'a')?.c4Accent).toBe('#08427B');
     expect(nodes.find((n) => n.id === 'b')?.c4Accent).toBe('#999999');
   });

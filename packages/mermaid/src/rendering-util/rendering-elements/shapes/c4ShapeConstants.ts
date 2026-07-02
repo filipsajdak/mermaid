@@ -1,12 +1,8 @@
 /**
  * Decorative geometry/typography constants for the C4 element shapes. Kept in one
- * place so the magic numbers behind the person arms, terminal glyph and browser
- * chrome are named and shared rather than scattered as inline literals.
+ * place so the magic numbers behind the terminal glyph and browser chrome are
+ * named and shared rather than scattered as inline literals.
  */
-
-// Person: faint arms in the lower body.
-export const C4_PERSON_ARM_OPACITY = 0.4;
-export const C4_PERSON_ARM_STROKE_WIDTH = 2;
 
 // Terminal: the monospace ">_" prompt glyph.
 export const C4_TERMINAL_GLYPH_FONT_FAMILY = 'monospace';
