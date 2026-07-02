@@ -218,6 +218,20 @@ describe('c4-beta db', () => {
       warnSpy.mockRestore();
     });
 
+    it('should accept a landscape diagram with context-level elements', async () => {
+      const warnSpy = vi.spyOn(log, 'warn').mockImplementation(() => undefined);
+      await populate(`c4-beta landscape
+        person user "User"
+        softwareSystem banking "Internet Banking System"
+        softwareSystem crm "CRM" :::external
+        user --> banking : "Uses"
+      `);
+      expect(db.getKind()).toBe('landscape');
+      db.getData();
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
     it('should warn when a relationship endpoint is not a declared element', async () => {
       const warnSpy = vi.spyOn(log, 'warn').mockImplementation(() => undefined);
       await populate(`c4-beta context

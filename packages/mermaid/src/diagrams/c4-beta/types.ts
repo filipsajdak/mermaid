@@ -1,4 +1,10 @@
-export type C4DiagramKind = 'context' | 'container' | 'component' | 'dynamic' | 'deployment';
+export type C4DiagramKind =
+  | 'landscape'
+  | 'context'
+  | 'container'
+  | 'component'
+  | 'dynamic'
+  | 'deployment';
 
 export type C4Direction = 'TB' | 'BT' | 'LR' | 'RL';
 

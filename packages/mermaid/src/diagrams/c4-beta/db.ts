@@ -53,6 +53,8 @@ const ELEMENT_DISPLAY_NAMES: Partial<Record<C4ElementKind, string>> = {
 // Element kinds that are unexpected for a given diagram kind. They still
 // render (forgiving WYSIWYG), but we warn so authors can spot mistakes.
 const UNEXPECTED_ELEMENT_KINDS: Record<C4DiagramKind, C4ElementKind[]> = {
+  // A System Landscape is a wider-scope context view: same element expectations.
+  landscape: ['container', 'component', 'deploymentNode'],
   context: ['container', 'component', 'deploymentNode'],
   container: ['component', 'deploymentNode'],
   component: ['deploymentNode'],

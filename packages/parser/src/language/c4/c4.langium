@@ -3,7 +3,7 @@ import "../common/common";
 
 entry C4:
     NEWLINE*
-    "c4-beta" kind=('context' | 'container' | 'component' | 'dynamic' | 'deployment')?
+    "c4-beta" kind=('landscape' | 'context' | 'container' | 'component' | 'dynamic' | 'deployment')?
     (
         NEWLINE
         | TitleAndAccessibilities

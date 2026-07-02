@@ -21,7 +21,7 @@ describe('c4-beta', () => {
       }
     );
 
-    it.each(['context', 'container', 'component', 'dynamic', 'deployment'])(
+    it.each(['landscape', 'context', 'container', 'component', 'dynamic', 'deployment'])(
       'should handle the %s kind keyword',
       (kind: string) => {
         const result = parse(`c4-beta ${kind}\n`);
