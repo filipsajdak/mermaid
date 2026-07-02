@@ -1,15 +1,15 @@
 {
   "name": "CHAR.component",
-  "changed": 133537,
-  "total": 990720,
-  "pct": 13.478783107235143,
+  "changed": 135946,
+  "total": 1001728,
+  "pct": 13.571149054433937,
   "baseSize": [
-    1440,
+    1456,
     688
   ],
   "workSize": [
-    1440,
-    263
+    1456,
+    246
   ],
   "identical": false
 }

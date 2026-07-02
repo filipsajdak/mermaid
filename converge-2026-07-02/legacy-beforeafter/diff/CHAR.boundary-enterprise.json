@@ -1,15 +1,15 @@
 {
   "name": "CHAR.boundary-enterprise",
-  "changed": 23841,
-  "total": 869760,
-  "pct": 2.7411009933774837,
+  "changed": 23923,
+  "total": 879424,
+  "pct": 2.720303289425806,
   "baseSize": [
-    1440,
+    1456,
     604
   ],
   "workSize": [
-    1440,
-    378
+    1456,
+    408
   ],
   "identical": false
 }

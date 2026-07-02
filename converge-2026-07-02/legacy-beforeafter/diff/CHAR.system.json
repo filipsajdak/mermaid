@@ -1,15 +1,15 @@
 {
   "name": "CHAR.system",
-  "changed": 114686,
-  "total": 950400,
-  "pct": 12.06712962962963,
+  "changed": 116736,
+  "total": 960960,
+  "pct": 12.147852147852149,
   "baseSize": [
-    1440,
+    1456,
     660
   ],
   "workSize": [
-    1440,
-    246
+    1456,
+    230
   ],
   "identical": false
 }

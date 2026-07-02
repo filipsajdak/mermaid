@@ -1,15 +1,15 @@
 {
   "name": "CHAR.rel-directions",
-  "changed": 59052,
-  "total": 856800,
-  "pct": 6.892156862745098,
+  "changed": 64238,
+  "total": 976976,
+  "pct": 6.575187107973993,
   "baseSize": [
-    1440,
+    1456,
     595
   ],
   "workSize": [
-    1440,
-    531
+    1456,
+    671
   ],
   "identical": false
 }

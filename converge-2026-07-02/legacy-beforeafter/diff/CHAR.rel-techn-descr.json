@@ -1,15 +1,15 @@
 {
   "name": "CHAR.rel-techn-descr",
-  "changed": 28080,
-  "total": 656640,
-  "pct": 4.276315789473684,
+  "changed": 28731,
+  "total": 674128,
+  "pct": 4.261950252770987,
   "baseSize": [
-    1440,
+    1456,
     456
   ],
   "workSize": [
-    1440,
-    393
+    1456,
+    463
   ],
   "identical": false
 }

@@ -1,14 +1,14 @@
 {
   "name": "CHAR.update-element-shape",
-  "changed": 75226,
-  "total": 732960,
-  "pct": 10.263315869897403,
+  "changed": 75185,
+  "total": 741104,
+  "pct": 10.144999892052937,
   "baseSize": [
-    1440,
+    1456,
     509
   ],
   "workSize": [
-    1440,
+    1456,
     280
   ],
   "identical": false

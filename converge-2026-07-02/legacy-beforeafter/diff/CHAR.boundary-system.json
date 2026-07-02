@@ -1,15 +1,15 @@
 {
   "name": "CHAR.boundary-system",
-  "changed": 26800,
-  "total": 897120,
-  "pct": 2.9873372570001786,
+  "changed": 26810,
+  "total": 907088,
+  "pct": 2.9556118039264105,
   "baseSize": [
-    1440,
+    1456,
     623
   ],
   "workSize": [
-    1440,
-    378
+    1456,
+    408
   ],
   "identical": false
 }

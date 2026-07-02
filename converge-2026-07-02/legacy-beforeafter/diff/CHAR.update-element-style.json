@@ -1,15 +1,15 @@
 {
   "name": "CHAR.update-element-style",
-  "changed": 44255,
-  "total": 725760,
-  "pct": 6.097745811287478,
+  "changed": 44800,
+  "total": 733824,
+  "pct": 6.105006105006105,
   "baseSize": [
-    1440,
+    1456,
     504
   ],
   "workSize": [
-    1440,
-    416
+    1456,
+    486
   ],
   "identical": false
 }

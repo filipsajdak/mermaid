@@ -1,15 +1,15 @@
 {
   "name": "CHAR.tags",
-  "changed": 50205,
-  "total": 774720,
-  "pct": 6.480405824039654,
+  "changed": 50421,
+  "total": 783328,
+  "pct": 6.4367672290534745,
   "baseSize": [
-    1440,
+    1456,
     538
   ],
   "workSize": [
-    1440,
-    464
+    1456,
+    534
   ],
   "identical": false
 }

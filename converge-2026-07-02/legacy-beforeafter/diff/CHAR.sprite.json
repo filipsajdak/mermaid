@@ -1,14 +1,14 @@
 {
   "name": "CHAR.sprite",
-  "changed": 70966,
-  "total": 802080,
-  "pct": 8.847745860762018,
+  "changed": 70961,
+  "total": 810992,
+  "pct": 8.749901355377117,
   "baseSize": [
-    1440,
+    1456,
     557
   ],
   "workSize": [
-    1440,
+    1456,
     264
   ],
   "identical": false
