@@ -5,8 +5,8 @@ import { styles2String } from './handDrawnShapeStyles.js';
 import type { D3Selection } from '../../../types.js';
 
 /**
- * C4 person shape: a circular head above a rounded-rectangle body with two
- * arms, as used in C4 model notation for Person / Person_Ext elements.
+ * C4 person shape: a circular head above a rounded-rectangle body, as used in
+ * C4 model notation for Person / Person_Ext elements.
  */
 export async function c4Person<T extends SVGGraphicsElement>(parent: D3Selection<T>, node: Node) {
   const { labelStyles, nodeStyles } = styles2String(node);
@@ -40,22 +40,6 @@ export async function c4Person<T extends SVGGraphicsElement>(parent: D3Selection
     .attr('rx', bodyRadius)
     .attr('ry', bodyRadius)
     .attr('style', `${nodeStyles};rx:${bodyRadius}px;ry:${bodyRadius}px`);
-
-  // Two arms in the lower body, the text color at 40% opacity, sitting below
-  // the text and reaching the body bottom.
-  const accent = /stroke:\s*([^;]+)/.exec(nodeStyles)?.[1]?.trim() ?? 'currentColor';
-  const armX = w * 0.29;
-  const armTop = bodyTop + bodyHeight * 0.5;
-  const armBottom = bodyTop + bodyHeight * 0.98;
-  for (const x of [-armX, armX]) {
-    group
-      .append('line')
-      .attr('x1', x)
-      .attr('y1', armTop)
-      .attr('x2', x)
-      .attr('y2', armBottom)
-      .attr('style', `stroke:${accent};stroke-opacity:0.4;stroke-width:2px`);
-  }
 
   group
     .append('circle')
