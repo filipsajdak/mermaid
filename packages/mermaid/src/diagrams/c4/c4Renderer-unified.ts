@@ -27,18 +27,26 @@ export const draw = async function (_text: string, id: string, _version: string,
   data4Layout.layoutAlgorithm = getRegisteredLayoutAlgorithm(layout);
   // direction comes from db.getDirection() via getData(); default defensively.
   data4Layout.direction = data4Layout.direction ?? 'TB';
-  data4Layout.nodeSpacing = c4Config?.c4ShapeMargin ?? 50;
-  // Extra rank spacing gives relationship labels more vertical room.
-  data4Layout.rankSpacing = (c4Config?.c4ShapeMargin ?? 50) + 40;
   data4Layout.markers = ['point'];
   data4Layout.diagramId = id;
   // Reserve vertical room above cluster children for the boundary title (needs the
   // dagre subGraphTitleMargin support; paired with the cluster-label-reserve fix).
+  // Spacing MUST go through config.flowchart: the dagre layout resolves
+  // nodesep/ranksep as config.nodeSpacing || config.flowchart.nodeSpacing ||
+  // data4Layout.nodeSpacing, and the flowchart schema defaults always exist, so
+  // a bare data4Layout.nodeSpacing/rankSpacing assignment is a silent no-op.
+  // The rank gap is sized so multi-line relationship labels fit between ranks
+  // instead of overlapping node text; a user nodeSpacing/rankSpacing in
+  // frontmatter (top-level config) still wins.
   data4Layout.config = {
     ...data4Layout.config,
     flowchart: {
       ...(data4Layout.config?.flowchart ?? {}),
       subGraphTitleMargin: { top: 40, bottom: 0 },
+      // Defaults resolve to 80/120 (c4ShapeMargin defaults to 50), matching
+      // c4-beta so both syntaxes share one layout rhythm.
+      nodeSpacing: (c4Config?.c4ShapeMargin ?? 50) + 30,
+      rankSpacing: (c4Config?.c4ShapeMargin ?? 50) + 70,
     },
   };
 

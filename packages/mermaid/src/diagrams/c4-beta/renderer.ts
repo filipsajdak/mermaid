@@ -23,17 +23,20 @@ const draw: DrawDefinition = async function (_text, id, _version, diag) {
   data4Layout.type = diag.type;
   data4Layout.layoutAlgorithm = getRegisteredLayoutAlgorithm(layout);
   data4Layout.direction = db.getDirection();
-  // Extra node spacing keeps sibling deployment-node headers from overlapping.
-  data4Layout.nodeSpacing = 80;
-  // Match legacy C4's rank spacing so multi-line relationship labels fit in the
-  // gap between vertically-stacked nodes instead of overlapping them.
-  data4Layout.rankSpacing = 90;
   // Reserve vertical space for the (multi-line) deployment-node header labels so
-  // they do not overlap nested content. The dagre layout reads this from the
-  // per-diagram config; clusters otherwise reserve no space for their label.
+  // they do not overlap nested content, and set the layout rhythm. Spacing MUST
+  // go through config.flowchart: the dagre layout resolves nodesep/ranksep as
+  // config.nodeSpacing || config.flowchart.nodeSpacing || data4Layout.nodeSpacing,
+  // and the flowchart schema defaults always exist, so a bare
+  // data4Layout.nodeSpacing/rankSpacing assignment is a silent no-op. The rank
+  // gap is sized so multi-line relationship labels fit between ranks instead of
+  // overlapping node text; a user nodeSpacing/rankSpacing in frontmatter
+  // (top-level config) still wins.
   data4Layout.config.flowchart = {
     ...data4Layout.config.flowchart,
     subGraphTitleMargin: { top: 40, bottom: 0 },
+    nodeSpacing: 80,
+    rankSpacing: 120,
   };
   data4Layout.markers = ['point'];
   data4Layout.diagramId = id;
