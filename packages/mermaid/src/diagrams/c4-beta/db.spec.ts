@@ -218,6 +218,36 @@ describe('c4-beta db', () => {
       warnSpy.mockRestore();
     });
 
+    it('should warn when a relationship endpoint is not a declared element', async () => {
+      const warnSpy = vi.spyOn(log, 'warn').mockImplementation(() => undefined);
+      await populate(`c4-beta context
+        person user "User"
+        user --> bankng : "Uses"
+      `);
+      db.getData();
+      expect(warnSpy).toHaveBeenCalledWith(
+        'c4-beta: relationship endpoint "bankng" is not a declared element id - check for a typo'
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('should warn on duplicate element ids', async () => {
+      const warnSpy = vi.spyOn(log, 'warn').mockImplementation(() => undefined);
+      await populate(`c4-beta container
+        softwareSystem a "A" {
+          container db "Database A"
+        }
+        softwareSystem b "B" {
+          container db "Database B"
+        }
+      `);
+      db.getData();
+      expect(warnSpy).toHaveBeenCalledWith(
+        'c4-beta: duplicate element id "db"; later declarations clobber earlier ones - use unique ids'
+      );
+      warnSpy.mockRestore();
+    });
+
     describe('technology validation', () => {
       it('should ignore technology on a person and warn', async () => {
         const warnSpy = vi.spyOn(log, 'warn').mockImplementation(() => undefined);
@@ -539,13 +569,13 @@ describe('c4-beta db', () => {
 
     it('should derive one outline entry per element kind used', async () => {
       await populate(exampleDiagram);
-      // Kind rows carry the kind only; the renderer resolves the swatch colour
-      // from the theme so it always matches the rendered elements.
+      // Kind rows carry the kind plus a human-readable label matching the
+      // element boxes; the renderer resolves the swatch colour from the theme.
       expect(db.getLegendItems()).toEqual([
-        { label: 'person', kind: 'person', external: false },
-        { label: 'softwareSystem', kind: 'softwareSystem', external: false },
-        { label: 'external softwareSystem', kind: 'softwareSystem', external: true },
-        { label: 'container', kind: 'container', external: false },
+        { label: 'Person', kind: 'person', external: false },
+        { label: 'Software System', kind: 'softwareSystem', external: false },
+        { label: 'External Software System', kind: 'softwareSystem', external: true },
+        { label: 'Container', kind: 'container', external: false },
       ]);
     });
 
@@ -558,7 +588,7 @@ describe('c4-beta db', () => {
         group team "Team"
       `);
       expect(db.getLegendItems()).toEqual([
-        { label: 'container', kind: 'container', external: false },
+        { label: 'Container', kind: 'container', external: false },
       ]);
     });
 
@@ -569,7 +599,7 @@ describe('c4-beta db', () => {
         softwareSystem a "A" :::team-a
       `);
       expect(db.getLegendItems()).toEqual([
-        { label: 'softwareSystem', kind: 'softwareSystem', external: false },
+        { label: 'Software System', kind: 'softwareSystem', external: false },
         { label: 'team-a', fill: '#1F2937', stroke: '#111827' },
         { label: 'async', fill: undefined, stroke: '#0a0' },
       ]);

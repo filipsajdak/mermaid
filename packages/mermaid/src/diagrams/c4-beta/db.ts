@@ -114,7 +114,10 @@ export const buildLegendItems = (
     if (!LEGEND_KINDS.has(element.kind)) {
       continue;
     }
-    const label = isExternal ? `external ${element.kind}` : element.kind;
+    // Human-readable row label matching the element boxes ("Software System"),
+    // not the raw grammar identifier ("softwareSystem").
+    const displayName = ELEMENT_DISPLAY_NAMES[element.kind] ?? element.kind;
+    const label = isExternal ? `External ${displayName}` : displayName;
     if (seenLabels.has(label)) {
       continue;
     }
@@ -203,6 +206,28 @@ export class C4BetaDB implements DiagramDB {
 
   private validateElements() {
     const unexpected = UNEXPECTED_ELEMENT_KINDS[this.kind];
+    // Reference validation (forgiving, like the rest of this method): warn on
+    // duplicate element ids (later nodes clobber earlier ones in the layout) and
+    // on relationships whose endpoints were never declared (they render phantom
+    // edges) - both are almost always authoring typos.
+    const seenIds = new Set<string>();
+    for (const element of this.elements) {
+      if (seenIds.has(element.id)) {
+        log.warn(
+          `c4-beta: duplicate element id "${element.id}"; later declarations clobber earlier ones - use unique ids`
+        );
+      }
+      seenIds.add(element.id);
+    }
+    for (const rel of this.relationships) {
+      for (const endpoint of [rel.sourceId, rel.targetId]) {
+        if (!seenIds.has(endpoint)) {
+          log.warn(
+            `c4-beta: relationship endpoint "${endpoint}" is not a declared element id - check for a typo`
+          );
+        }
+      }
+    }
     for (const element of this.elements) {
       if (unexpected.includes(element.kind)) {
         log.warn(

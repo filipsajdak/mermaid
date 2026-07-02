@@ -230,8 +230,8 @@ customer --> mainframe : "Uses" :::critical
     );
     expect(svg).toContain('class="c4-legend"');
     expect(svg).toContain('Legend');
-    expect(svg).toContain('>person</text>');
-    expect(svg).toContain('>external softwareSystem</text>');
+    expect(svg).toContain('>Person</text>');
+    expect(svg).toContain('>External Software System</text>');
     expect(svg).toContain('>critical</text>');
     // Outline swatches: identity colour on the stroke, not a solid fill.
     expect(svg).toContain('stroke="#08427B"');
