@@ -25,7 +25,9 @@ const draw: DrawDefinition = async function (_text, id, _version, diag) {
   data4Layout.direction = db.getDirection();
   // Extra node spacing keeps sibling deployment-node headers from overlapping.
   data4Layout.nodeSpacing = 80;
-  data4Layout.rankSpacing = 60;
+  // Match legacy C4's rank spacing so multi-line relationship labels fit in the
+  // gap between vertically-stacked nodes instead of overlapping them.
+  data4Layout.rankSpacing = 90;
   // Reserve vertical space for the (multi-line) deployment-node header labels so
   // they do not overlap nested content. The dagre layout reads this from the
   // per-diagram config; clusters otherwise reserve no space for their label.
@@ -37,6 +39,16 @@ const draw: DrawDefinition = async function (_text, id, _version, diag) {
   data4Layout.diagramId = id;
 
   await render(data4Layout, svg);
+
+  // Raise relationship labels above the element nodes. The shared layout draws
+  // nodes last, so a label that overlaps a node (common in tight vertically
+  // stacked container/deployment diagrams) would be painted behind it and become
+  // invisible. Re-appending each edgeLabels group after its sibling nodes (this
+  // also covers nested-cluster sub-graphs) keeps such labels readable over their
+  // opaque background.
+  svg.selectAll('g.edgeLabels').each(function (this: SVGGElement) {
+    this.parentNode?.appendChild(this);
+  });
 
   if (db.isLegendEnabled()) {
     // Map c4-beta legend items onto the shared C4LegendItem shape (outline colour).

@@ -154,7 +154,9 @@ const getStyles = (options: C4BetaStyleOptions) =>
       background-color: ${options.edgeLabelBackground};
     }
     rect {
-      opacity: 0.5;
+      /* Opaque so a label raised above an overlapping node stays legible
+         (matches the legacy C4 relationship-label treatment). */
+      opacity: 1;
       background-color: ${options.edgeLabelBackground};
       fill: ${options.edgeLabelBackground};
     }

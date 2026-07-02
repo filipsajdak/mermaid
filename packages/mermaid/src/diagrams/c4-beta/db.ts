@@ -372,6 +372,9 @@ export class C4BetaDB implements DiagramDB {
         end: relationship.targetId,
         type: 'normal',
         label: buildRelationshipLabel(relationship, step),
+        // Straight lines with the label centred on the line (matching legacy C4);
+        // a curved edge would pull the centred label sideways onto nearby nodes.
+        curve: 'linear',
         labelpos: 'c',
         classes: classes.join(' '),
         style,
