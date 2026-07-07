@@ -250,10 +250,10 @@ describe('C4 characterization', () => {
       );
     });
 
-    it('CHAR.update-element-shape should accept the $shape override (ignored by renderer)', () => {
+    it('CHAR.update-element-shape should apply the $shape override', () => {
       imgSnapshotTest(
         `C4Container
-        title UpdateElementStyle shape override (ignored by renderer)
+        title UpdateElementStyle shape override
         Container(a, "Default", "Tech", "no override")
         Container(b, "As Folder", "Tech", "shape override")
         Container(c, "As Cylinder", "Tech", "shape override")
@@ -262,7 +262,9 @@ describe('C4 characterization', () => {
         `,
         {}
       );
-      cy.get('rect').should('have.length', 3);
+      // the default container renders as a rect; folder and cylinder each render as a path
+      // (scoped to .node to exclude unrelated defs/marker paths)
+      cy.get('.node path').should('have.length', 2);
     });
 
     it('CHAR.update-rel-style should apply UpdateRelStyle offsets and colors', () => {
@@ -322,38 +324,40 @@ describe('C4 characterization', () => {
       cy.get('svg').find('a').should('not.exist');
     });
 
-    it('CHAR.sprite should accept the $sprite attribute (not yet supported by renderer)', () => {
+    it('CHAR.sprite should apply the $sprite attribute', () => {
       imgSnapshotTest(
         `C4Container
-        title Sprite attribute (not shown by current renderer)
+        title Sprite attribute
         Container(a, "Browser", "Tech", "single-page app", $sprite="browser")
         Container(b, "Terminal", "Tech", "server-side app", $sprite="terminal")
         `,
         {}
       );
-      cy.get('rect').should('have.length', 2);
+      cy.get('.c4-address-bar').should('exist');
+      cy.get('.c4-terminal-glyph').should('exist');
       cy.get('image').should('not.exist');
       cy.get('svg svg').should('not.exist');
     });
 
-    it('CHAR.descr-wrapping should not wrap long descriptions (wrap is currently a no-op, see #7949)', () => {
+    it('CHAR.descr-wrapping should wrap long descriptions via HTML labels (the wrap-config bug in #7949 is unrelated)', () => {
       imgSnapshotTest(
         `C4Context
-        title Description wrapping (currently a no-op)
+        title Description wrapping
         Person(p, "Person", "A customer of the bank with personal bank accounts and a long description that should wrap across multiple lines")
         System(s, "System", "Allows customers to view information about their bank accounts and make payments")
         Rel(p, s, "Uses")
         `,
         {}
       );
-      cy.contains(
-        'tspan',
-        'A customer of the bank with personal bank accounts and a long description that should wrap across multiple lines'
-      ).should('exist');
-      cy.contains(
-        'tspan',
-        'Allows customers to view information about their bank accounts and make payments'
-      ).should('exist');
+      // scoped to .node to exclude the legitimate edge-label tspan (Rel "Uses")
+      cy.get('.node tspan').should('not.exist');
+      cy.get('span.c4-descr').should('have.length', 2);
+      cy.get('span.c4-descr')
+        .first()
+        .should(
+          'contain.text',
+          'A customer of the bank with personal bank accounts and a long description that should wrap across multiple lines'
+        );
     });
   });
 });
