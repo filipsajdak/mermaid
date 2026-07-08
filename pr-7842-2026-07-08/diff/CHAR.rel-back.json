@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.rel-back",
+  "changed": 33181,
+  "total": 704704,
+  "pct": 4.708501725547181,
+  "baseSize": [
+    1456,
+    475
+  ],
+  "workSize": [
+    1456,
+    484
+  ],
+  "identical": false
+}

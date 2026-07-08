@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.person",
+  "changed": 52469,
+  "total": 859040,
+  "pct": 6.107864593034085,
+  "baseSize": [
+    1456,
+    538
+  ],
+  "workSize": [
+    1456,
+    590
+  ],
+  "identical": false
+}

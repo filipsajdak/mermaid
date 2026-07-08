@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.deployment",
+  "changed": 41549,
+  "total": 1089088,
+  "pct": 3.8150268848798263,
+  "baseSize": [
+    1456,
+    703
+  ],
+  "workSize": [
+    1456,
+    748
+  ],
+  "identical": false
+}
