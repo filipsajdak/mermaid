@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.update-element-shape",
+  "changed": 0,
+  "total": 741104,
+  "pct": 0,
+  "baseSize": [
+    1456,
+    509
+  ],
+  "workSize": [
+    1456,
+    509
+  ],
+  "identical": true
+}
