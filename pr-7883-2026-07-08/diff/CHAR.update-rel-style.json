@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.update-rel-style",
+  "changed": 24862,
+  "total": 704704,
+  "pct": 3.5280060848242667,
+  "baseSize": [
+    1456,
+    456
+  ],
+  "workSize": [
+    1456,
+    484
+  ],
+  "identical": false
+}

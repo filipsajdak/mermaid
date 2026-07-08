@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.boundary-nested",
+  "changed": 19236,
+  "total": 1071616,
+  "pct": 1.7950459866220736,
+  "baseSize": [
+    1456,
+    718
+  ],
+  "workSize": [
+    1456,
+    736
+  ],
+  "identical": false
+}

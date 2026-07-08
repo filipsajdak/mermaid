@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.dynamic",
+  "changed": 51401,
+  "total": 757120,
+  "pct": 6.789016272189349,
+  "baseSize": [
+    1456,
+    475
+  ],
+  "workSize": [
+    1456,
+    520
+  ],
+  "identical": false
+}

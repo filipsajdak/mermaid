@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.boundary-container",
+  "changed": 23548,
+  "total": 940576,
+  "pct": 2.5035722791140747,
+  "baseSize": [
+    1456,
+    623
+  ],
+  "workSize": [
+    1456,
+    646
+  ],
+  "identical": false
+}
