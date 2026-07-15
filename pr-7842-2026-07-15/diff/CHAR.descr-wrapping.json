@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.descr-wrapping",
+  "changed": 150985,
+  "total": 1065792,
+  "pct": 14.16646024740287,
+  "baseSize": [
+    1456,
+    732
+  ],
+  "workSize": [
+    1456,
+    608
+  ],
+  "identical": false
+}

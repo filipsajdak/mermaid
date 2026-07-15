@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.deployment-aliases",
+  "changed": 36762,
+  "total": 1059968,
+  "pct": 3.4682179084651614,
+  "baseSize": [
+    1456,
+    703
+  ],
+  "workSize": [
+    1456,
+    728
+  ],
+  "identical": false
+}

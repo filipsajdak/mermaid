@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.rel-bidirectional",
+  "changed": 24691,
+  "total": 687232,
+  "pct": 3.5928187278822876,
+  "baseSize": [
+    1456,
+    456
+  ],
+  "workSize": [
+    1456,
+    472
+  ],
+  "identical": false
+}

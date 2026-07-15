@@ -1,0 +1,15 @@
+{
+  "name": "CHAR.container",
+  "changed": 123809,
+  "total": 1009008,
+  "pct": 12.27036852036852,
+  "baseSize": [
+    1456,
+    693
+  ],
+  "workSize": [
+    1456,
+    670
+  ],
+  "identical": false
+}
