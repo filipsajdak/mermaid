@@ -19,8 +19,6 @@ import { c4Folder } from './shapes/c4Folder.js';
 import { c4Bucket } from './shapes/c4Bucket.js';
 import { c4Terminal } from './shapes/c4Terminal.js';
 import { c4Browser } from './shapes/c4Browser.js';
-import { c4Database } from './shapes/c4Database.js';
-import { c4Queue } from './shapes/c4Queue.js';
 import { cylinder } from './shapes/cylinder.js';
 import { datastore } from './shapes/datastore.js';
 import { dividedRectangle } from './shapes/dividedRect.js';
@@ -189,22 +187,6 @@ export const shapesDefs = [
     description: 'Single-page application element in C4 model notation',
     aliases: ['c4browser'],
     handler: c4Browser,
-  },
-  {
-    semanticName: 'C4 Database',
-    name: 'C4 Database',
-    shortName: 'c4-database',
-    description: 'Database element in C4 model notation',
-    aliases: ['c4database'],
-    handler: c4Database,
-  },
-  {
-    semanticName: 'C4 Queue',
-    name: 'C4 Queue',
-    shortName: 'c4-queue',
-    description: 'Message queue element in C4 model notation',
-    aliases: ['c4queue'],
-    handler: c4Queue,
   },
   {
     semanticName: 'Start',

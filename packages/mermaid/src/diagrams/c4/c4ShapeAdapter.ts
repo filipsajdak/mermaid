@@ -53,11 +53,11 @@ const SHAPE_KEYWORDS: Record<string, ShapeID> = {
   rounded: 'rounded',
   folder: 'c4-folder',
   directory: 'c4-folder',
-  cylinder: 'c4-database',
-  database: 'c4-database',
-  db: 'c4-database',
-  queue: 'c4-queue',
-  pipe: 'c4-queue',
+  cylinder: 'cylinder',
+  database: 'cylinder',
+  db: 'cylinder',
+  queue: 'h-cyl',
+  pipe: 'h-cyl',
   bucket: 'c4-bucket',
   blob: 'c4-bucket',
   s3: 'c4-bucket',
@@ -93,10 +93,10 @@ export const resolveNodeShape = (shape: C4ShapeLike): ShapeID => {
     return 'c4-person';
   }
   if (DB_SHAPES.has(typeC4Shape)) {
-    return 'c4-database';
+    return 'cylinder';
   }
   if (QUEUE_SHAPES.has(typeC4Shape)) {
-    return 'c4-queue';
+    return 'h-cyl';
   }
   return 'rounded';
 };
