@@ -160,4 +160,20 @@ C4Context
       {}
     );
   });
+  it('C4.8 should keep element text on one line when c4.width is large enough', () => {
+    imgSnapshotTest(
+      [216, 4000].map(
+        (width) => `---
+title: c4.width=${width}
+config:
+  c4:
+    width: ${width}
+---
+C4Context
+      System(s, "System", "A long description that wraps at the default width and stays on one line when the width is large")
+      `
+      ),
+      {}
+    );
+  });
 });
