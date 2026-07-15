@@ -13,6 +13,10 @@ const C4_ELEMENT_TYPES = [
   'component_queue',
 ].flatMap((type) => [type, `external_${type}`]);
 
+// Config values land in a stylesheet; strip characters that could terminate
+// the declaration or the rule so a value stays a single CSS value.
+const cssValue = (value) => String(value).replace(/[!;<>{}]/g, '');
+
 // Per-element-type font rules from the c4 config (personFontFamily and friends).
 const elementFontStyles = () => {
   const c4 = getConfig().c4 ?? {};
@@ -21,11 +25,11 @@ const elementFontStyles = () => {
     const fontSize = c4[`${type}FontSize`];
     const fontWeight = c4[`${type}FontWeight`];
     const props = [
-      fontFamily ? `    font-family: ${fontFamily};` : '',
+      fontFamily ? `    font-family: ${cssValue(fontFamily)};` : '',
       fontSize
-        ? `    font-size: ${typeof fontSize === 'number' ? `${fontSize}px` : fontSize};`
+        ? `    font-size: ${typeof fontSize === 'number' ? `${fontSize}px` : cssValue(fontSize)};`
         : '',
-      fontWeight ? `    font-weight: ${fontWeight};` : '',
+      fontWeight ? `    font-weight: ${cssValue(fontWeight)};` : '',
     ].filter(Boolean);
     if (props.length === 0) {
       return '';
