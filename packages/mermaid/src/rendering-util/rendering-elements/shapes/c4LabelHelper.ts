@@ -43,7 +43,9 @@ export const c4LabelHelper = async <T extends SVGGraphicsElement>(
     ...(node.description ?? []).map((line) => ({ text: line, cssClass: 'c4-descr' })),
   ].filter((section) => section.text);
 
-  const wrapWidth = Math.max((node.width ?? 0) - 2 * (node.padding ?? 0), MIN_WRAP_WIDTH);
+  const wrapWidth = node.width
+    ? Math.max(node.width - 2 * (node.padding ?? 0), MIN_WRAP_WIDTH)
+    : (getConfig().flowchart?.wrappingWidth ?? 200);
 
   const rendered = [];
   for (const section of sections) {
