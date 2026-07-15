@@ -1,8 +1,47 @@
+import { getConfig } from '../../diagram-api/diagramAPI.js';
+
+const C4_ELEMENT_TYPES = [
+  'person',
+  'system',
+  'system_db',
+  'system_queue',
+  'container',
+  'container_db',
+  'container_queue',
+  'component',
+  'component_db',
+  'component_queue',
+].flatMap((type) => [type, `external_${type}`]);
+
+// Per-element-type font rules from the c4 config (personFontFamily and friends).
+const elementFontStyles = () => {
+  const c4 = getConfig().c4 ?? {};
+  return C4_ELEMENT_TYPES.map((type) => {
+    const fontFamily = c4[`${type}FontFamily`];
+    const fontSize = c4[`${type}FontSize`];
+    const fontWeight = c4[`${type}FontWeight`];
+    const props = [
+      fontFamily ? `    font-family: ${fontFamily};` : '',
+      fontSize
+        ? `    font-size: ${typeof fontSize === 'number' ? `${fontSize}px` : fontSize};`
+        : '',
+      fontWeight ? `    font-weight: ${fontWeight};` : '',
+    ].filter(Boolean);
+    if (props.length === 0) {
+      return '';
+    }
+    return `  .c4-shape.c4-${type} .label {\n${props.join('\n')}\n  }`;
+  })
+    .filter(Boolean)
+    .join('\n');
+};
+
 const getStyles = (options) =>
   `.person {
     stroke: ${options.personBorder};
     fill: ${options.personBkg};
   }
+${elementFontStyles()}
 
   /* C4 outline style (c4model.com): the element's identity colour is set inline
      per element (fill + stroke + color), and the label text inherits it. */
@@ -11,10 +50,8 @@ const getStyles = (options) =>
     color: inherit;
     fill: currentColor;
   }
-  /* Structurizr typography: bold name, smaller stereotype/type and description lines.
-     The tspan selector is needed for the weight: each created tspan carries a
-     font-weight presentation attribute, which inherited values do not override. */
-  .c4-shape .label .c4-name tspan {
+  /* Structurizr typography: bold name, smaller stereotype/type and description lines. */
+  .c4-shape .label .c4-name {
     font-weight: bold;
   }
   .c4-shape .label .c4-type {
@@ -23,7 +60,7 @@ const getStyles = (options) =>
   .c4-shape .label .c4-descr {
     font-size: 0.82em;
   }
-  /* Outline boxes: a 2px coloured border over a light fill, generously rounded. */
+  /* Outline boxes: a 2px coloured border over a light fill. */
   .c4-shape .basic,
   .c4-shape rect,
   .c4-shape path,

@@ -62,6 +62,12 @@ export const c4LabelHelper = async <T extends SVGGraphicsElement>(
     );
     // Center each wrapped line within the section; the outer tspan elements sit at x=0.
     select(textEl).selectAll('tspan.text-outer-tspan').attr('text-anchor', 'middle');
+    // Without markdown every word is "normal"; drop the presentation attributes so
+    // font weight and style from CSS (section classes, per-element config) inherit.
+    select(textEl)
+      .selectAll('tspan.text-inner-tspan')
+      .attr('font-weight', null)
+      .attr('font-style', null);
     rendered.push({ el: sectionEl, box: sectionEl.node()!.getBBox() });
   }
 
