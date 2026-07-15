@@ -50,7 +50,6 @@ export async function person<T extends SVGGraphicsElement>(parent: D3Selection<T
     }
   } else {
     // Body first, then the head drawn on top so the full circle stays visible.
-    // The radius is set inline so it overrides the shared .c4-shape rect rule.
     group
       .append('rect')
       .attr('x', -w / 2)
@@ -59,7 +58,7 @@ export async function person<T extends SVGGraphicsElement>(parent: D3Selection<T
       .attr('height', bodyHeight)
       .attr('rx', bodyRadius)
       .attr('ry', bodyRadius)
-      .attr('style', `${nodeStyles};rx:${bodyRadius}px;ry:${bodyRadius}px`);
+      .attr('style', nodeStyles);
 
     group
       .append('circle')

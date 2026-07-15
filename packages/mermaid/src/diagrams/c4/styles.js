@@ -69,10 +69,6 @@ ${elementFontStyles()}
   .c4-shape line {
     stroke-width: 2px;
   }
-  .c4-shape rect {
-    rx: 12px;
-    ry: 12px;
-  }
 `;
 
 export default getStyles;
