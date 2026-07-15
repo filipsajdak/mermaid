@@ -250,10 +250,10 @@ describe('C4 characterization', () => {
       );
     });
 
-    it('CHAR.update-element-shape should apply the $shape override', () => {
+    it('CHAR.update-element-shape should apply the $shape="cylinder" override ($shape="folder" not yet supported)', () => {
       imgSnapshotTest(
         `C4Container
-        title UpdateElementStyle shape override
+        title UpdateElementStyle shape override (folder not yet supported)
         Container(a, "Default", "Tech", "no override")
         Container(b, "As Folder", "Tech", "shape override")
         Container(c, "As Cylinder", "Tech", "shape override")
@@ -262,9 +262,10 @@ describe('C4 characterization', () => {
         `,
         {}
       );
-      // the default container renders as a rect; folder and cylinder each render as a path
+      // the cylinder renders as a path; the folder override falls back to the plain box
       // (scoped to .node to exclude unrelated defs/marker paths)
-      cy.get('.node path').should('have.length', 2);
+      cy.get('.node path').should('have.length', 1);
+      cy.get('.node > rect').should('have.length', 2);
     });
 
     it('CHAR.update-rel-style should apply UpdateRelStyle offsets and colors', () => {
@@ -324,19 +325,19 @@ describe('C4 characterization', () => {
       cy.get('svg').find('a').should('not.exist');
     });
 
-    it('CHAR.sprite should apply the $sprite attribute', () => {
+    it('CHAR.sprite should accept the $sprite attribute (not yet supported by renderer)', () => {
       imgSnapshotTest(
         `C4Container
-        title Sprite attribute
+        title Sprite attribute (not shown by current renderer)
         Container(a, "Browser", "Tech", "single-page app", $sprite="browser")
         Container(b, "Terminal", "Tech", "server-side app", $sprite="terminal")
         `,
         {}
       );
-      cy.get('.c4-address-bar').should('exist');
-      cy.get('.c4-terminal-glyph').should('exist');
+      // both containers fall back to the plain box; a sprite implementation must break this
       cy.get('image').should('not.exist');
       cy.get('svg svg').should('not.exist');
+      cy.get('.node > rect').should('have.length', 2);
     });
 
     it('CHAR.descr-wrapping should wrap long descriptions as SVG text (the wrap-config bug in #7949 is unrelated)', () => {
