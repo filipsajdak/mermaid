@@ -48,7 +48,7 @@ const DB_SHAPES = new Set([
 
 // Structurizr-style shape keywords accepted via $shape, $sprite or $tags.
 const SHAPE_KEYWORDS: Record<string, ShapeID> = {
-  person: 'c4-person',
+  person: 'person',
   box: 'rounded',
   rounded: 'rounded',
   cylinder: 'cylinder',
@@ -81,7 +81,7 @@ export const resolveNodeShape = (shape: C4ShapeLike): ShapeID => {
   }
   const typeC4Shape = shape.typeC4Shape.text;
   if (typeC4Shape === 'person' || typeC4Shape === 'external_person') {
-    return 'c4-person';
+    return 'person';
   }
   if (DB_SHAPES.has(typeC4Shape)) {
     return 'cylinder';
