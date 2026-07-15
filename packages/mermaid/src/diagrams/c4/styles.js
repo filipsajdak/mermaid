@@ -7,20 +7,16 @@ const getStyles = (options) =>
   /* C4 outline style (c4model.com): the element's identity colour is set inline
      per element (fill + stroke + color), and the label text inherits it. */
   .c4-shape .label,
-  .c4-shape .label text,
-  .c4-shape .label span,
-  .c4-shape .label p {
+  .c4-shape .label text {
     color: inherit;
     fill: currentColor;
   }
-  .c4-shape .label small {
-    font-size: 0.75em;
+  /* Structurizr typography: bold name, smaller stereotype/type and description lines.
+     The tspan selector is needed for the weight: each created tspan carries a
+     font-weight presentation attribute, which inherited values do not override. */
+  .c4-shape .label .c4-name tspan {
+    font-weight: bold;
   }
-  /* Structurizr typography: a smaller stereotype/type line and a smaller description.
-     NOTE: no \`opacity\` here on purpose - opacity < 1 promotes the span to its own
-     compositing layer, which (because the shape is drawn at the origin and then
-     translated into place) keeps the stale origin position and paints the line in the
-     top-left corner. Keep the stereotype muted via colour, not opacity. */
   .c4-shape .label .c4-type {
     font-size: 0.75em;
   }

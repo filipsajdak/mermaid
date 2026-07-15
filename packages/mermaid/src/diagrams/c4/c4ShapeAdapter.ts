@@ -116,22 +116,10 @@ const stereotypeLabel = (typeC4Shape: string): string => {
 
 const isExternal = (typeC4Shape: string): boolean => typeC4Shape.startsWith('external_');
 
-const escapeHtml = (txt: string): string =>
-  txt.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-
-const buildNodeLabel = (shape: C4ShapeLike): string => {
+// Structurizr-style type line, e.g. `[Container: Node.js]`.
+const stereotypeText = (shape: C4ShapeLike): string => {
   const stereotype = stereotypeLabel(shape.typeC4Shape.text);
-  const type = shape.techn?.text
-    ? `[${escapeHtml(stereotype)}: ${escapeHtml(shape.techn.text)}]`
-    : `[${escapeHtml(stereotype)}]`;
-  const lines: string[] = [
-    `<b>${escapeHtml(shape.label.text)}</b>`,
-    `<span class="c4-type">${type}</span>`,
-  ];
-  if (shape.descr?.text) {
-    lines.push(`<span class="c4-descr">${escapeHtml(shape.descr.text)}</span>`);
-  }
-  return lines.join('<br/>');
+  return shape.techn?.text ? `[${stereotype}: ${shape.techn.text}]` : `[${stereotype}]`;
 };
 
 // Clamp a palette colour dark enough to read as text/border on a light fill.
@@ -172,29 +160,40 @@ const elementCssStyles = (shape: C4ShapeLike, palette: Record<string, unknown>):
 /**
  * Converts a legacy C4 shape into a unified-renderer Node. `palette` is the
  * legacy c4 draw config (it carries the `<type>_bg_color` keys and `background`).
+ * `elementWidth` is the target shape width (`c4.width`); the label helper
+ * derives its own text-wrapping width from it.
  */
 export const buildC4Node = (
   shape: C4ShapeLike,
   palette: Record<string, unknown>,
   padding: number,
   look: string,
-  wrappingWidth: number
+  elementWidth: number
 ): NonClusterNode => {
   const typeC4Shape = shape.typeC4Shape.text;
   const cssClasses = ['c4-shape', `c4-${typeC4Shape}`];
   if (isExternal(typeC4Shape)) {
     cssClasses.push('c4-external');
   }
+  const nodeShape = resolveNodeShape(shape);
+  const cssStyles = elementCssStyles(shape, palette);
+  if (nodeShape === 'rounded' || nodeShape === 'fr-rect') {
+    // Inline so it wins over the shape's default corner radius.
+    cssStyles.push('rx:12px', 'ry:12px');
+  }
   return {
     id: shape.alias,
-    label: buildNodeLabel(shape),
+    label: shape.label.text,
+    stereotype: stereotypeText(shape),
+    description: shape.descr?.text ? [shape.descr.text] : undefined,
     labelType: 'string',
     isGroup: false,
-    shape: resolveNodeShape(shape),
+    shape: nodeShape,
     cssClasses: cssClasses.join(' '),
-    cssStyles: elementCssStyles(shape, palette),
+    cssStyles,
     padding,
     look,
-    width: wrappingWidth,
+    useHtmlLabels: false,
+    width: elementWidth,
   };
 };

@@ -339,7 +339,7 @@ describe('C4 characterization', () => {
       cy.get('svg svg').should('not.exist');
     });
 
-    it('CHAR.descr-wrapping should wrap long descriptions via HTML labels (the wrap-config bug in #7949 is unrelated)', () => {
+    it('CHAR.descr-wrapping should wrap long descriptions as SVG text (the wrap-config bug in #7949 is unrelated)', () => {
       imgSnapshotTest(
         `C4Context
         title Description wrapping
@@ -349,14 +349,15 @@ describe('C4 characterization', () => {
         `,
         {}
       );
-      // scoped to .node to exclude the legitimate edge-label tspan (Rel "Uses")
-      cy.get('.node tspan').should('not.exist');
-      cy.get('span.c4-descr').should('have.length', 2);
-      cy.get('span.c4-descr')
+      cy.get('.node foreignObject').should('not.exist');
+      cy.get('.node .c4-descr').should('have.length', 2);
+      // wrapping produces multiple tspan lines within the description section
+      cy.get('.node .c4-descr').first().find('tspan.text-outer-tspan').should('have.length.gt', 1);
+      cy.get('.node .c4-descr')
         .first()
         .should(
           'contain.text',
-          'A customer of the bank with personal bank accounts and a long description that should wrap across multiple lines'
+          'A customer of the bank with personal bank accounts and a long description'
         );
     });
   });
