@@ -20,8 +20,9 @@ export async function person<T extends SVGGraphicsElement>(parent: D3Selection<T
   const w = Math.max(bbox.width + padding * 2, node.width ?? 0, 100);
   // Proportions taken from the c4model.com person: head radius 0.23x the body
   // width, overlapping the body by 0.27x the head radius, body corners 0.177x
-  // the width.
-  const headRadius = Math.max(w * 0.23, 16);
+  // the width. The head is clamped so a body widened by a long unwrapped
+  // label keeps a person-sized head.
+  const headRadius = Math.min(Math.max(w * 0.23, 16), 56);
   const overlap = headRadius * 0.27;
   const bodyHeight = Math.max(
     bbox.height + padding * 2,
