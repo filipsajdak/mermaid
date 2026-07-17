@@ -1,4 +1,5 @@
 import { hsl } from 'd3';
+import type { C4DiagramConfig } from '../../config.type.js';
 import type { ShapeID } from '../../rendering-util/rendering-elements/shapes.js';
 import type { NonClusterNode } from '../../rendering-util/types.js';
 
@@ -12,6 +13,13 @@ import type { NonClusterNode } from '../../rendering-util/types.js';
 interface C4Text {
   text: string;
 }
+
+/**
+ * The c4 diagram config extended with its per-element-type palette colours
+ * (`person_bg_color` and friends), which sit next to the typed options. The
+ * values stay `unknown` because the draw config carries merged theme entries.
+ */
+type C4ElementConfig = C4DiagramConfig & Partial<Record<`${string}_bg_color`, unknown>>;
 
 /** The subset of a legacy C4 shape the adapter reads. */
 export interface C4ShapeLike {
@@ -128,10 +136,9 @@ const ensureReadable = (color: string): string => {
  * and text (the element's identity) over a light fill, as on c4model.com. An
  * explicit per-element colour (UpdateElementStyle) overrides it.
  */
-const elementCssStyles = (shape: C4ShapeLike, palette: Record<string, unknown>): string[] => {
-  const background = typeof palette.background === 'string' ? palette.background : '#ffffff';
-  const styles: string[] = [`fill:${background}`];
-  const paletteColor = palette[`${shape.typeC4Shape.text}_bg_color`];
+const elementCssStyles = (shape: C4ShapeLike, config: C4ElementConfig): string[] => {
+  const styles: string[] = ['fill:#ffffff'];
+  const paletteColor = config[`${shape.typeC4Shape.text}_bg_color`];
   if (typeof paletteColor === 'string') {
     const identity = ensureReadable(paletteColor);
     styles.push(`stroke:${identity}`, `color:${identity}`);
@@ -149,14 +156,14 @@ const elementCssStyles = (shape: C4ShapeLike, palette: Record<string, unknown>):
 };
 
 /**
- * Converts a legacy C4 shape into a unified-renderer Node. `palette` is the
- * legacy c4 draw config (it carries the `<type>_bg_color` keys and `background`).
+ * Converts a legacy C4 shape into a unified-renderer Node. `config` is the c4
+ * diagram config, whose `<type>_bg_color` palette drives the outline styling.
  * `elementWidth` is the target shape width (`c4.width`); the label helper
  * derives its own text-wrapping width from it.
  */
 export const buildC4Node = (
   shape: C4ShapeLike,
-  palette: Record<string, unknown>,
+  config: C4ElementConfig,
   padding: number,
   look: string,
   elementWidth: number
@@ -167,7 +174,7 @@ export const buildC4Node = (
     cssClasses.push('c4-external');
   }
   const nodeShape = resolveNodeShape(shape);
-  const cssStyles = elementCssStyles(shape, palette);
+  const cssStyles = elementCssStyles(shape, config);
   if (nodeShape === 'rounded' || nodeShape === 'fr-rect') {
     // Inline so it wins over the shape's default corner radius.
     cssStyles.push('rx:12px', 'ry:12px');
