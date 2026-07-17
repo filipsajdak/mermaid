@@ -50,31 +50,33 @@ export const c4LabelHelper = async <T extends SVGGraphicsElement>(
   // renderer; the (currently ignored) c4.wrap option is tracked in #7949.
   const width = config.wrap ? wrapWidth : Number.POSITIVE_INFINITY;
 
-  const rendered = [];
-  for (const section of sections) {
-    const sectionEl = labelEl.append('g').attr('class', section.cssClass);
-    const textEl = await createText(
-      sectionEl,
-      sanitizeText(decodeEntities(section.text ?? ''), config),
-      {
-        useHtmlLabels: false,
-        markdown: false,
-        isNode: true,
-        width,
-        style: node.labelStyle,
-      },
-      config
-    );
-    // Center each wrapped line within the section; the outer tspan elements sit at x=0.
-    select(textEl).selectAll('tspan.text-outer-tspan').attr('text-anchor', 'middle');
-    // Without markdown every word is "normal"; drop the presentation attributes so
-    // font weight and style from CSS (section classes, per-element config) inherit.
-    select(textEl)
-      .selectAll('tspan.text-inner-tspan')
-      .attr('font-weight', null)
-      .attr('font-style', null);
-    rendered.push({ el: sectionEl, box: sectionEl.node()!.getBBox() });
-  }
+  const rendered = await Promise.all(
+    sections.map(async (section) => {
+      // Appending before the first await pins the section order in the DOM.
+      const sectionEl = labelEl.append('g').attr('class', section.cssClass);
+      const textEl = await createText(
+        sectionEl,
+        sanitizeText(decodeEntities(section.text ?? ''), config),
+        {
+          useHtmlLabels: false,
+          markdown: false,
+          isNode: true,
+          width,
+          style: node.labelStyle,
+        },
+        config
+      );
+      // Center each wrapped line within the section; the outer tspan elements sit at x=0.
+      select(textEl).selectAll('tspan.text-outer-tspan').attr('text-anchor', 'middle');
+      // Without markdown every word is "normal"; drop the presentation attributes so
+      // font weight and style from CSS (section classes, per-element config) inherit.
+      select(textEl)
+        .selectAll('tspan.text-inner-tspan')
+        .attr('font-weight', null)
+        .attr('font-style', null);
+      return { el: sectionEl, box: sectionEl.node()!.getBBox() };
+    })
+  );
 
   const totalWidth = Math.max(...rendered.map(({ box }) => box.width), 0);
   let y = 0;

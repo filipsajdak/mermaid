@@ -286,15 +286,17 @@ export const drawC4ShapeArray = async function (
   // final position, so its label (and any composited sub-element) lays out under the final
   // transform - drawing at the origin and translating afterwards leaves composited layers
   // (e.g. anything with opacity) painting at the stale origin.
-  for (const c4Shape of c4Shapes) {
-    const node = buildC4Node(c4Shape, conf, conf.c4ShapePadding, look, conf.width);
-    node.domId = `${diagramId}-${node.id}`;
-    const measured = await shapeHandlerFor(node)(diagram, node, renderOptions);
-    c4Shape.width = node.width ?? conf.width;
-    c4Shape.height = node.height ?? conf.height;
-    c4Shape.margin = conf.c4ShapeMargin;
-    measured.remove();
-  }
+  await Promise.all(
+    c4Shapes.map(async (c4Shape) => {
+      const node = buildC4Node(c4Shape, conf, conf.c4ShapePadding, look, conf.width);
+      node.domId = `${diagramId}-${node.id}`;
+      const measured = await shapeHandlerFor(node)(diagram, node, renderOptions);
+      c4Shape.width = node.width ?? conf.width;
+      c4Shape.height = node.height ?? conf.height;
+      c4Shape.margin = conf.c4ShapeMargin;
+      measured.remove();
+    })
+  );
 
   // Position with the legacy grid.
   for (const c4Shape of c4Shapes) {
@@ -303,17 +305,20 @@ export const drawC4ShapeArray = async function (
 
   // Pass 2 (draw): render each shape into a group already translated to its grid position
   // (unified shapes are centred at the origin; legacy x/y is the top-left corner).
-  for (const c4Shape of c4Shapes) {
-    const node = buildC4Node(c4Shape, conf, conf.c4ShapePadding, look, conf.width);
-    node.domId = `${diagramId}-${node.id}`;
-    const positioned = diagram
-      .append('g')
-      .attr(
-        'transform',
-        `translate(${c4Shape.x + c4Shape.width / 2}, ${c4Shape.y + c4Shape.height / 2})`
-      );
-    await shapeHandlerFor(node)(positioned, node, renderOptions);
-  }
+  await Promise.all(
+    c4Shapes.map(async (c4Shape) => {
+      const node = buildC4Node(c4Shape, conf, conf.c4ShapePadding, look, conf.width);
+      node.domId = `${diagramId}-${node.id}`;
+      // Appending before the await keeps the shapes' stacking order deterministic.
+      const positioned = diagram
+        .append('g')
+        .attr(
+          'transform',
+          `translate(${c4Shape.x + c4Shape.width / 2}, ${c4Shape.y + c4Shape.height / 2})`
+        );
+      await shapeHandlerFor(node)(positioned, node, renderOptions);
+    })
+  );
 
   currentBounds.bumpLastMargin(conf.c4ShapeMargin);
 };
