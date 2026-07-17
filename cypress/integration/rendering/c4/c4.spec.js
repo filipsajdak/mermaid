@@ -160,12 +160,13 @@ C4Context
       {}
     );
   });
-  it('C4.8 should keep element text on one line when c4.width is large enough', () => {
+  it('C4.8 should wrap element text at c4.width when the root wrap config is enabled', () => {
     imgSnapshotTest(
       [216, 4000].map(
         (width) => `---
-title: c4.width=${width}
+title: wrap at c4.width=${width}
 config:
+  wrap: true
   c4:
     width: ${width}
 ---

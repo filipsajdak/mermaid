@@ -348,7 +348,7 @@ describe('C4 characterization', () => {
         System(s, "System", "Allows customers to view information about their bank accounts and make payments")
         Rel(p, s, "Uses")
         `,
-        {}
+        { wrap: true }
       );
       cy.get('.node foreignObject').should('not.exist');
       cy.get('.node .c4-descr').should('have.length', 2);

@@ -46,6 +46,9 @@ export const c4LabelHelper = async <T extends SVGGraphicsElement>(
   const wrapWidth = node.width
     ? Math.max(node.width - 2 * (node.padding ?? 0), MIN_WRAP_WIDTH)
     : (getConfig().flowchart?.wrappingWidth ?? 200);
+  // Wrapping is opt-in via the root `wrap` config, matching the legacy C4
+  // renderer; the (currently ignored) c4.wrap option is tracked in #7949.
+  const width = config.wrap ? wrapWidth : Number.POSITIVE_INFINITY;
 
   const rendered = [];
   for (const section of sections) {
@@ -57,7 +60,7 @@ export const c4LabelHelper = async <T extends SVGGraphicsElement>(
         useHtmlLabels: false,
         markdown: false,
         isNode: true,
-        width: wrapWidth,
+        width,
         style: node.labelStyle,
       },
       config
