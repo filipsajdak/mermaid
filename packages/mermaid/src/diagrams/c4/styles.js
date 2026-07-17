@@ -13,30 +13,35 @@ const C4_ELEMENT_TYPES = [
   'component_queue',
 ].flatMap((type) => [type, `external_${type}`]);
 
-// Config values land in a stylesheet; strip characters that could terminate
-// the declaration or the rule so a value stays a single CSS value.
-const cssValue = (value) => String(value).replace(/[!;<>{}]/g, '');
-
 // Per-element-type font rules from the c4 config (personFontFamily and friends).
+// Built through the CSSOM so config values are parsed as CSS values: a value
+// that does not fit the property's grammar (e.g. one smuggling extra
+// declarations) is dropped whole instead of landing in the stylesheet.
 const elementFontStyles = () => {
   const c4 = getConfig().c4 ?? {};
-  return C4_ELEMENT_TYPES.map((type) => {
+  const sheet = new CSSStyleSheet();
+  for (const type of C4_ELEMENT_TYPES) {
+    const rule =
+      sheet.cssRules[sheet.insertRule(`.c4-shape.c4-${type} .label {}`, sheet.cssRules.length)];
     const fontFamily = c4[`${type}FontFamily`];
     const fontSize = c4[`${type}FontSize`];
     const fontWeight = c4[`${type}FontWeight`];
-    const props = [
-      fontFamily ? `    font-family: ${cssValue(fontFamily)};` : '',
-      fontSize
-        ? `    font-size: ${typeof fontSize === 'number' ? `${fontSize}px` : cssValue(fontSize)};`
-        : '',
-      fontWeight ? `    font-weight: ${cssValue(fontWeight)};` : '',
-    ].filter(Boolean);
-    if (props.length === 0) {
-      return '';
+    if (fontFamily) {
+      rule.style.setProperty('font-family', fontFamily);
     }
-    return `  .c4-shape.c4-${type} .label {\n${props.join('\n')}\n  }`;
-  })
-    .filter(Boolean)
+    if (fontSize) {
+      rule.style.setProperty(
+        'font-size',
+        typeof fontSize === 'number' ? `${fontSize}px` : fontSize
+      );
+    }
+    if (fontWeight) {
+      rule.style.setProperty('font-weight', String(fontWeight));
+    }
+  }
+  return [...sheet.cssRules]
+    .filter((rule) => rule.style.length > 0)
+    .map((rule) => `  ${rule.cssText}`)
     .join('\n');
 };
 
