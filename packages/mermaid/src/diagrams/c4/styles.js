@@ -40,8 +40,8 @@ const getStyles = (options) =>
   }
 ${elementFontStyles()}
 
-  /* The element font colour is set inline per element (default white); the
-     label text takes it via currentColor. */
+  /* C4 outline style (c4model.com): the element's identity colour is set inline
+     per element (fill + stroke + color), and the label text inherits it. */
   .c4-shape .label,
   .c4-shape .label text {
     color: inherit;

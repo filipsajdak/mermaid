@@ -1,3 +1,4 @@
+import { hsl } from 'd3';
 import type { C4DiagramConfig } from '../../config.type.js';
 import type { ShapeID } from '../../rendering-util/rendering-elements/shapes.js';
 import type { NonClusterNode } from '../../rendering-util/types.js';
@@ -134,24 +135,39 @@ const C4_ELEMENT_TYPE_SET = new Set<string>(C4_ELEMENT_TYPES);
 const isC4ElementType = (value: string): value is (typeof C4_ELEMENT_TYPES)[number] =>
   C4_ELEMENT_TYPE_SET.has(value);
 
+// Clamp a palette colour dark enough to read as text/border on a light fill.
+const ensureReadable = (color: string): string => {
+  const c = hsl(color);
+  if (Number.isNaN(c.l)) {
+    return color;
+  }
+  c.l = Math.min(c.l, 0.42);
+  return c.formatHex();
+};
+
 /**
- * Element colours: the per-element `<type>_bg_color`/`<type>_border_color` config
- * palette drives the fill and border, with white text. An explicit per-element
- * colour (UpdateElementStyle: $bgColor/$borderColor/$fontColor) overrides it.
+ * Outline styling for an element type: the per-element palette colour becomes the
+ * border and text (the element's identity) over a light fill, as on c4model.com.
+ * An explicit per-element colour (UpdateElementStyle: $bgColor/$borderColor/$fontColor)
+ * overrides it.
  */
 const elementCssStyles = (shape: C4ShapeLike, config: C4DiagramConfig): string[] => {
   const elementType = shape.typeC4Shape.text;
-  const fill = shape.bgColor ?? (isC4ElementType(elementType) && config[`${elementType}_bg_color`]);
-  const stroke =
-    shape.borderColor ?? (isC4ElementType(elementType) && config[`${elementType}_border_color`]);
-  const styles: string[] = [];
-  if (fill) {
-    styles.push(`fill:${fill}`);
+  const styles: string[] = ['fill:#ffffff'];
+  const paletteColor = isC4ElementType(elementType) && config[`${elementType}_bg_color`];
+  if (paletteColor) {
+    const identity = ensureReadable(paletteColor);
+    styles.push(`stroke:${identity}`, `color:${identity}`);
   }
-  if (stroke) {
-    styles.push(`stroke:${stroke}`);
+  if (shape.bgColor) {
+    styles.push(`fill:${shape.bgColor}`);
   }
-  styles.push(`color:${shape.fontColor ?? '#FFFFFF'}`);
+  if (shape.borderColor) {
+    styles.push(`stroke:${shape.borderColor}`);
+  }
+  if (shape.fontColor) {
+    styles.push(`color:${shape.fontColor}`);
+  }
   return styles;
 };
 
