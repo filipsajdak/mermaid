@@ -1,4 +1,3 @@
-import { hsl } from 'd3';
 import type { C4DiagramConfig } from '../../config.type.js';
 import type { ShapeID } from '../../rendering-util/rendering-elements/shapes.js';
 import type { NonClusterNode } from '../../rendering-util/types.js';
@@ -13,13 +12,6 @@ import type { NonClusterNode } from '../../rendering-util/types.js';
 interface C4Text {
   text: string;
 }
-
-/**
- * The c4 diagram config extended with its per-element-type palette colours
- * (`person_bg_color` and friends), which sit next to the typed options. The
- * values stay `unknown` because the draw config carries merged theme entries.
- */
-type C4ElementConfig = C4DiagramConfig & Partial<Record<`${string}_bg_color`, unknown>>;
 
 /** The subset of a legacy C4 shape the adapter reads. */
 export interface C4ShapeLike {
@@ -121,49 +113,56 @@ const stereotypeText = (shape: C4ShapeLike): string => {
   return shape.techn?.text ? `[${stereotype}: ${shape.techn.text}]` : `[${stereotype}]`;
 };
 
-// Clamp a palette colour dark enough to read as text/border on a light fill.
-const ensureReadable = (color: string): string => {
-  const c = hsl(color);
-  if (Number.isNaN(c.l)) {
-    return color;
-  }
-  c.l = Math.min(c.l, 0.42);
-  return c.formatHex();
-};
+const C4_ELEMENT_TYPES = (
+  [
+    'person',
+    'system',
+    'system_db',
+    'system_queue',
+    'container',
+    'container_db',
+    'container_queue',
+    'component',
+    'component_db',
+    'component_queue',
+  ] as const
+).flatMap((type) => [type, `external_${type}`] as const);
+
+const C4_ELEMENT_TYPE_SET = new Set<string>(C4_ELEMENT_TYPES);
+
+const isC4ElementType = (value: string): value is (typeof C4_ELEMENT_TYPES)[number] =>
+  C4_ELEMENT_TYPE_SET.has(value);
 
 /**
- * Outline styling for an element type: the c4 palette colour becomes the border
- * and text (the element's identity) over a light fill, as on c4model.com. An
- * explicit per-element colour (UpdateElementStyle) overrides it.
+ * Element colours: the per-element `<type>_bg_color`/`<type>_border_color` config
+ * palette drives the fill and border, with white text. An explicit per-element
+ * colour (UpdateElementStyle: $bgColor/$borderColor/$fontColor) overrides it.
  */
-const elementCssStyles = (shape: C4ShapeLike, config: C4ElementConfig): string[] => {
-  const styles: string[] = ['fill:#ffffff'];
-  const paletteColor = config[`${shape.typeC4Shape.text}_bg_color`];
-  if (typeof paletteColor === 'string') {
-    const identity = ensureReadable(paletteColor);
-    styles.push(`stroke:${identity}`, `color:${identity}`);
+const elementCssStyles = (shape: C4ShapeLike, config: C4DiagramConfig): string[] => {
+  const elementType = shape.typeC4Shape.text;
+  const fill = shape.bgColor ?? (isC4ElementType(elementType) && config[`${elementType}_bg_color`]);
+  const stroke =
+    shape.borderColor ?? (isC4ElementType(elementType) && config[`${elementType}_border_color`]);
+  const styles: string[] = [];
+  if (fill) {
+    styles.push(`fill:${fill}`);
   }
-  if (shape.bgColor) {
-    styles.push(`fill:${shape.bgColor}`);
+  if (stroke) {
+    styles.push(`stroke:${stroke}`);
   }
-  if (shape.borderColor) {
-    styles.push(`stroke:${shape.borderColor}`);
-  }
-  if (shape.fontColor) {
-    styles.push(`color:${shape.fontColor}`);
-  }
+  styles.push(`color:${shape.fontColor ?? '#FFFFFF'}`);
   return styles;
 };
 
 /**
  * Converts a legacy C4 shape into a unified-renderer Node. `config` is the c4
- * diagram config, whose `<type>_bg_color` palette drives the outline styling.
+ * diagram config, whose `<type>_bg_color`/`<type>_border_color` palette drives the fill and border.
  * `elementWidth` is the target shape width (`c4.width`); the label helper
  * derives its own text-wrapping width from it.
  */
 export const buildC4Node = (
   shape: C4ShapeLike,
-  config: C4ElementConfig,
+  config: C4DiagramConfig,
   padding: number,
   look: string,
   elementWidth: number
