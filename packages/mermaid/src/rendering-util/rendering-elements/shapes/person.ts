@@ -80,8 +80,25 @@ export async function person<T extends SVGGraphicsElement>(parent: D3Selection<T
     `translate(${-(bbox.width / 2) - (bbox.x - (bbox.left ?? 0))}, ${bodyCenterY - bbox.height / 2 - (bbox.y - (bbox.top ?? 0))})`
   );
 
+  // Edge intersection outline: the head's exposed arc joined to the body
+  // rectangle, so arrows meet the person silhouette rather than its bounding box.
+  const headCenterY = top + headRadius;
+  const phiRight = Math.asin(Math.min(1, (bodyTop - headCenterY) / headRadius));
+  const HEAD_SEGMENTS = 24;
+  const headArc = Array.from({ length: HEAD_SEGMENTS + 1 }, (_, i) => {
+    const phi = phiRight - ((Math.PI + 2 * phiRight) * i) / HEAD_SEGMENTS;
+    return { x: headRadius * Math.cos(phi), y: headCenterY + headRadius * Math.sin(phi) };
+  });
+  const outline = [
+    ...headArc,
+    { x: -w / 2, y: bodyTop },
+    { x: -w / 2, y: totalHeight / 2 },
+    { x: w / 2, y: totalHeight / 2 },
+    { x: w / 2, y: bodyTop },
+  ];
+
   node.intersect = function (point) {
-    return intersect.rect(node, point);
+    return intersect.polygon(node, outline, point);
   };
 
   return shapeSvg;
