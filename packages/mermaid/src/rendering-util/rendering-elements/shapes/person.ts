@@ -1,4 +1,4 @@
-import { labelHelper, updateNodeBounds, getNodeClasses } from './util.js';
+import { labelHelper, updateNodeBounds, getNodeClasses, generateCirclePoints } from './util.js';
 import intersect from '../intersect/index.js';
 import type { Node } from '../../types.js';
 import { styles2String, userNodeOverrides } from './handDrawnShapeStyles.js';
@@ -80,21 +80,48 @@ export async function person<T extends SVGGraphicsElement>(parent: D3Selection<T
     `translate(${-(bbox.width / 2) - (bbox.x - (bbox.left ?? 0))}, ${bodyCenterY - bbox.height / 2 - (bbox.y - (bbox.top ?? 0))})`
   );
 
-  // Edge intersection outline: the head's exposed arc joined to the body
-  // rectangle, so arrows meet the person silhouette rather than its bounding box.
+  // Edge intersection outline: the head's exposed arc joined to the body's
+  // rounded-rectangle outline, so arrows meet the person silhouette rather than
+  // its bounding box.
   const headCenterY = top + headRadius;
-  const phiRight = Math.asin(Math.min(1, (bodyTop - headCenterY) / headRadius));
+  const phiRightDeg =
+    (Math.asin(Math.min(1, (bodyTop - headCenterY) / headRadius)) * 180) / Math.PI;
   const HEAD_SEGMENTS = 24;
-  const headArc = Array.from({ length: HEAD_SEGMENTS + 1 }, (_, i) => {
-    const phi = phiRight - ((Math.PI + 2 * phiRight) * i) / HEAD_SEGMENTS;
-    return { x: headRadius * Math.cos(phi), y: headCenterY + headRadius * Math.sin(phi) };
-  });
+  const headArc = generateCirclePoints(
+    0,
+    -headCenterY,
+    headRadius,
+    HEAD_SEGMENTS,
+    180 + phiRightDeg,
+    -phiRightDeg
+  );
   const outline = [
     ...headArc,
-    { x: -w / 2, y: bodyTop },
-    { x: -w / 2, y: totalHeight / 2 },
-    { x: w / 2, y: totalHeight / 2 },
-    { x: w / 2, y: bodyTop },
+    ...generateCirclePoints(-(-w / 2 + bodyRadius), -(bodyTop + bodyRadius), bodyRadius, 12, 90, 0),
+    ...generateCirclePoints(
+      -(-w / 2 + bodyRadius),
+      -(totalHeight / 2 - bodyRadius),
+      bodyRadius,
+      12,
+      360,
+      270
+    ),
+    ...generateCirclePoints(
+      -(w / 2 - bodyRadius),
+      -(totalHeight / 2 - bodyRadius),
+      bodyRadius,
+      12,
+      270,
+      180
+    ),
+    ...generateCirclePoints(
+      -(w / 2 - bodyRadius),
+      -(bodyTop + bodyRadius),
+      bodyRadius,
+      12,
+      180,
+      90
+    ),
   ];
 
   node.intersect = function (point) {
