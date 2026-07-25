@@ -1,17 +1,5 @@
 import { getConfig } from '../../diagram-api/diagramAPI.js';
-
-const C4_ELEMENT_TYPES = [
-  'person',
-  'system',
-  'system_db',
-  'system_queue',
-  'container',
-  'container_db',
-  'container_queue',
-  'component',
-  'component_db',
-  'component_queue',
-].flatMap((type) => [type, `external_${type}`]);
+import { C4_ELEMENT_TYPES } from './c4ShapeAdapter.js';
 
 // Per-element-type font rules from the c4 config (personFontFamily and friends).
 // Built through the CSSOM so config values are parsed as CSS values: a value

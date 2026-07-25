@@ -113,7 +113,8 @@ const stereotypeText = (shape: C4ShapeLike): string => {
   return shape.techn?.text ? `[${stereotype}: ${shape.techn.text}]` : `[${stereotype}]`;
 };
 
-const C4_ELEMENT_TYPES = (
+/** The C4 element types, internal and external, that carry per-type config. */
+export const C4_ELEMENT_TYPES = (
   [
     'person',
     'system',
