@@ -113,6 +113,26 @@ const stereotypeText = (shape: C4ShapeLike): string => {
   return shape.techn?.text ? `[${stereotype}: ${shape.techn.text}]` : `[${stereotype}]`;
 };
 
+const escapeHtml = (txt: string): string =>
+  txt
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+/** A C4 relationship label: bold name, then optional `[technology]` and description. */
+export const buildEdgeLabel = (rel: { label: C4Text; techn?: C4Text; descr?: C4Text }): string => {
+  const lines: string[] = [`<b>${escapeHtml(rel.label.text)}</b>`];
+  if (rel.techn?.text) {
+    lines.push(`<small><i>[${escapeHtml(rel.techn.text)}]</i></small>`);
+  }
+  if (rel.descr?.text) {
+    lines.push(`<small>${escapeHtml(rel.descr.text)}</small>`);
+  }
+  return lines.join('<br/>');
+};
+
 /** The C4 element types, internal and external, that carry per-type config. */
 export const C4_ELEMENT_TYPES = (
   [
