@@ -20,6 +20,24 @@ import { basename, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
+/**
+ * Launches Playwright's own Chromium, falling back to the locally installed Chrome.
+ * The fallback matters where `playwright install chromium` cannot complete, since the
+ * harness only needs a Chromium-family browser, not the pinned build.
+ */
+export async function launchBrowser(args: string[] = []): Promise<Browser> {
+  try {
+    return await chromium.launch({ headless: true, args });
+  } catch (bundledError) {
+    try {
+      return await chromium.launch({ headless: true, channel: 'chrome', args });
+    } catch {
+      // Report the bundled failure: that is the one `playwright install` fixes.
+      throw bundledError;
+    }
+  }
+}
+
 /** Determinism defaults mirrored from cypress/helpers/util.ts (NOT imported - that pulls Cypress). */
 const DETERMINISM_DEFAULTS = {
   startOnLoad: false,
@@ -148,10 +166,10 @@ export async function renderCorpus(options: RenderCorpusOptions): Promise<TileRe
   await mkdir(outDir, { recursive: true });
 
   const files = (await readdir(corpusDir)).filter((f) => f.endsWith('.mmd')).sort();
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--force-device-scale-factor=1', `--window-size=${VIEWPORT.width},${VIEWPORT.height}`],
-  });
+  const browser = await launchBrowser([
+    '--force-device-scale-factor=1',
+    `--window-size=${VIEWPORT.width},${VIEWPORT.height}`,
+  ]);
 
   const results: TileResult[] = [];
   try {
@@ -229,10 +247,7 @@ async function main(): Promise<void> {
     console.error('Pass --batch-dir <dir> or --file <mmd>.');
     process.exit(1);
   }
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--force-device-scale-factor=1'],
-  });
+  const browser = await launchBrowser(['--force-device-scale-factor=1']);
   try {
     const name = basename(values.file as string, '.mmd');
     const text = await readFile(values.file as string, 'utf8');

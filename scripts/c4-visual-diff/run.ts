@@ -14,7 +14,6 @@
  *   pnpm c4:visual-diff --push-assets            # also push the gallery to c4-proof-assets
  */
 
-import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { cp, mkdir, readdir } from 'node:fs/promises';
@@ -24,7 +23,7 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 import { startOrAdoptDevServer, isPortFree, type ManagedServer } from './server-utils.ts';
-import { renderCorpus } from './render.ts';
+import { launchBrowser, renderCorpus } from './render.ts';
 import { diffAll } from './diff.ts';
 import { buildGallery } from './gallery.ts';
 
@@ -41,11 +40,12 @@ function sanitizeRef(ref: string): string {
 
 async function preflightChromium(): Promise<void> {
   try {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchBrowser();
     await browser.close();
   } catch (err) {
-    console.error('[c4:visual-diff] Playwright Chromium failed to launch.');
+    console.error('[c4:visual-diff] No Chromium-family browser could be launched.');
     console.error('  Run once: npx playwright install chromium');
+    console.error('  (a locally installed Google Chrome is used as a fallback)');
     console.error(`  (${err instanceof Error ? err.message : err})`);
     process.exit(1);
   }
