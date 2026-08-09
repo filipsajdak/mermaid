@@ -139,7 +139,20 @@ try {
 </body>
 </html>`;
 
-  const browser = await chromium.launch({ headless: true });
+  // Prefer Playwright's own Chromium, but fall back to a locally installed Chrome:
+  // this script only needs a Chromium-family browser, and `playwright install
+  // chromium` cannot always complete.
+  let browser;
+  try {
+    browser = await chromium.launch({ headless: true });
+  } catch (bundledError) {
+    try {
+      browser = await chromium.launch({ headless: true, channel: 'chrome' });
+    } catch {
+      // Report the bundled failure: that is the one `playwright install` fixes.
+      throw bundledError;
+    }
+  }
   const page = await browser.newPage();
   await page.setViewportSize({ width: 1400, height: 900 });
 
