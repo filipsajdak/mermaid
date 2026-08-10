@@ -1,0 +1,10 @@
+flowchart TB
+  a1[from top-left] --> P
+  a2[from top] --> P
+  a3[from top-right] --> P
+  P@{ shape: person, label: "Person with edges" }
+  P --> b1[to bottom-left]
+  P --> b2[to bottom]
+  P --> b3[to bottom-right]
+  L[left] --> P
+  P --> R[right]

@@ -1,0 +1,9 @@
+---
+config:
+  wrap: true
+---
+C4Context
+  title Root wrap enabled
+  Person(p, "Person", "A customer of the bank with personal bank accounts and a long description that should wrap across multiple lines")
+  System(s, "System", "Allows customers to view information about their bank accounts and make payments")
+  Rel(p, s, "Uses")

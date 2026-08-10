@@ -1,0 +1,7 @@
+C4Context
+  title Default C4 colors
+  Person(p, "Banking Customer", "A customer of the bank")
+  System(s, "Internet Banking", "Lets customers view accounts")
+  System_Ext(e, "Email System", "Sends e-mails")
+  Rel(p, s, "Uses")
+  Rel(s, e, "Sends via", "SMTP")
