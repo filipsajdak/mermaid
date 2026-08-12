@@ -1,0 +1,10 @@
+C4Context
+  title Boundary + relationships regression
+  Enterprise_Boundary(b, "Bank") {
+    Person(p, "Customer", "A bank customer")
+    System(s, "Banking", "Core system")
+  }
+  System_Ext(e, "Email", "External mail")
+  Rel(p, s, "Uses")
+  Rel(s, e, "Sends", "SMTP")
+  BiRel(p, e, "Contacts")

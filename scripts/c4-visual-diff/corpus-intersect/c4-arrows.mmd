@@ -1,0 +1,10 @@
+C4Context
+  title C4 arrows meet shapes
+  Person(p, "Customer", "A bank customer")
+  System(s, "Banking", "Core system")
+  SystemDb(db, "Database", "Stores data")
+  SystemQueue(q, "Events", "Message bus")
+  Rel(p, s, "Uses")
+  Rel(s, db, "Reads/Writes", "JDBC")
+  Rel(s, q, "Publishes", "AMQP")
+  Rel(q, p, "Notifies")
