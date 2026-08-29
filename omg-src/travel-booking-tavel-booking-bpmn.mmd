@@ -1,0 +1,53 @@
+bpmn-beta LR
+  start message n_6_53 "Receive Customer Flight and Hotel Room Reservation Request"
+  subprocess n_6_66 "activity"
+  task n_6_309 "Package Flights and Hotel Rooms for Customer Review"
+  send task n_6_360 "Present Flights and Hotel Rooms Alternatives to Customer"
+  event-gateway n_6_415 "gateway"
+  intermediate timer n_6_439 "24 hours"
+  intermediate message n_6_456 "Cancel Request"
+  intermediate message n_6_473 "Customer make Selection"
+  task n_6_490 "Update Customer Record (Request Cancelled)"
+  send task n_6_541 "Notify Customer to Start Again"
+  send task n_6_609 "Request Credit Card Information from Customer"
+    boundary timer n_6_660 "24 Hours"
+  end message n_6_677 "Request Cancelled"
+  xor n_6_709 "gateway"
+  subprocess n_6_733 "Booking"
+    boundary error n_6_1461 "Booking Error 2"
+  task n_6_1480 "Charge Credit Card"
+    boundary error n_6_1549 "boundary"
+  end n_6_1533 "Booking Successfully Completed"
+  throw compensation n_6_1566 "Booking"
+  xor n_6_1585 "Retry Limit Exceeded?"
+  send task n_6_1626 "Notify Customer Invalid Credit Card"
+  end n_6_1677 "Booking Not Completed"
+  xor n_6_594 "Retry Limit Exceeded?"
+  send task n_6_1620 "Notify Customer Failed Booking"
+  end n_6_1742 "end"
+  n_6_53 --> n_6_66
+  n_6_66 --> n_6_309
+  n_6_309 --> n_6_360
+  n_6_360 --> n_6_415
+  n_6_541 --> n_6_490
+  n_6_456 --> n_6_490
+  n_6_415 --> n_6_456
+  n_6_490 --> n_6_677
+  n_6_415 --> n_6_439
+  n_6_439 --> n_6_541
+  n_6_415 --> n_6_473
+  n_6_473 --> n_6_609
+  n_6_660 --> n_6_541
+  n_6_609 --> n_6_709
+  n_6_709 --> n_6_733
+  n_6_733 --> n_6_1480
+  n_6_1480 --> n_6_1533
+  n_6_1549 --> n_6_1566
+  n_6_1566 --> n_6_1585
+  n_6_1585 -- No --> n_6_609
+  n_6_1461 --> n_6_594
+  n_6_594 -- No --> n_6_709
+  n_6_1585 -- Yes --> n_6_1626
+  n_6_1626 --> n_6_1677
+  n_6_594 -- Yes --> n_6_1620
+  n_6_1620 --> n_6_1742

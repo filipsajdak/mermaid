@@ -1,0 +1,69 @@
+bpmn-beta LR
+  pool "Nobel Committee for Medicine"
+    data DO1276276949391 "Report with Recommendations"
+    start timer n_6_84 "September Year n-1"
+    send task n_6_97 "Send Nomination Form"
+    receive task n_6_346 "Collect Completed Forms"
+    user task n_6_429 "Screen & Select Preliminary Candidates"
+    send task n_6_495 "Send List of Selected Preliminary Candidates"
+    receive task n_6_695 "Collect Candidates Work Assessment Reports"
+    xor n_6_675 "Expert Assistance Required?"
+    user task n_6_1102 "Determine Need for Expert Assistance"
+    subprocess n_6_176 "Write Recommendations Report"
+    send task n_6_669 "Submit Report with Recommendations"
+    user task n_6_414 "Hold Nobel Prize Award Ceremony"
+    end n_6_801 "end"
+    user task n_6_1244 "Select Final Candidates and their works"
+    data n_6_337 "Report with Recommendations"
+    data-store n_6_53 "Completed Nomination Forms"
+    data-store n_6_399 "Preliminary Candidates"
+    data-store n_6_486 "Candidates Assessments"
+    data-store n_6_1235 "Nominators"
+    note n_6_821 "Around 3000 invitations/confidential nomination forms are se"
+  pool "Nominator"
+    start message n_6_150 "start"
+    user task n_6_209 "Identify Potential Nominee(s)"
+    send task n_6_260 "Send Nominee Completed Form(s)"
+    end n_6_1068 "Nomination Form(s) Sent"
+    note n_6_759 "Nominator may nominate one or more Nominees"
+  pool "Expert"
+    start message n_6_163 "start"
+    user task n_6_550 "Assess Candidates Work"
+    send task n_6_601 "Send Candidates Assessment Report"
+    end n_6_1215 "Assessments Completed"
+    note n_6_1299 "A selected Expert is asked to assess the work of the Prelimi"
+  pool "Nobel Assembly"
+    start message n_6_835 "start"
+    user task n_6_848 "Announce Nobel Prize Laureates"
+    end n_6_901 "Announcement Made"
+    user task n_6_917 "Discuss Nominations (Meeting 1)"
+    user task n_6_990 "Select Laureates (Meeting 2)"
+  pool "Nobel Prize Laureate"
+  n_6_84 --> n_6_97
+  n_6_695 --> n_6_1244
+  n_6_669 --> n_6_414
+  n_6_414 --> n_6_801
+  n_6_176 --> n_6_669
+  n_6_97 --> n_6_346
+  n_6_346 --> n_6_429
+  n_6_429 --> n_6_1102
+  n_6_675 -- Yes --> n_6_495
+  n_6_495 --> n_6_695
+  n_6_675 -- No --> n_6_176
+  n_6_1102 --> n_6_675
+  n_6_1244 --> n_6_176
+  n_6_848 --> n_6_901
+  n_6_917 --> n_6_990
+  n_6_835 --> n_6_917
+  n_6_990 --> n_6_848
+  n_6_209 --> n_6_260
+  n_6_150 --> n_6_209
+  n_6_260 --> n_6_1068
+  n_6_163 --> n_6_550
+  n_6_550 --> n_6_601
+  n_6_601 --> n_6_1215
+  n_6_97 -.-> n_6_150
+  n_6_260 -.-> n_6_346
+  n_6_495 -.-> n_6_163
+  n_6_601 -.-> n_6_695
+  n_6_669 -.-> n_6_835

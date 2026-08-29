@@ -1,0 +1,70 @@
+bpmn-beta LR
+  pool "VIP customer"
+  pool "Key account manager"
+    start message n_6_1049 "Customer has a problem"
+    manual task n_6_1062 "Get problem description"
+    xor n_6_1113 "Can handle It myself?"
+    manual task n_6_1135 "Explain solution"
+    manual task n_6_1186 "Ask 1st level support"
+    intermediate message n_6_1237 "Answer received"
+    end n_6_1337 "end"
+  pool "1st Level Support Agent"
+    start message n_6_465 "issue"
+    manual task n_6_529 "Handle 1st level issue"
+    manual task n_6_580 "Provide feedback for account manager"
+    end n_6_631 "end"
+    xor n_6_69 "Result?"
+    manual task n_6_93 "Ask 2nd level support"
+    intermediate message n_6_146 "Answer recevied"
+  pool "2nd level support agent"
+    start message n_6_654 "Ticket received"
+    manual task n_6_667 "Handle 2nd level issue"
+    xor n_6_718 "Unsure?"
+    manual task n_6_740 "Provide feedback for 1st level support"
+    manual task n_6_791 "Ask developer"
+    end n_6_842 "end"
+    intermediate message n_6_171 "Answer received"
+    xor n_6_190 "Result?"
+    manual task n_6_214 "Insert into product backlog"
+    xor n_6_267 "gateway"
+    note n_6_1363 "Sometimes opinion of development is needed"
+    note n_6_1417 "Some issues cannot get fixed right now but should be fixed i"
+  pool "Software developer"
+    start message n_6_864 "Request from support"
+    manual task n_6_877 "Examine problem"
+    manual task n_6_928 "Provide feedback for 2nd level support"
+    end n_6_979 "end"
+  n_6_864 --> n_6_877
+  n_6_877 --> n_6_928
+  n_6_928 --> n_6_979
+  n_6_69 -- Issue resolved --> n_6_580
+  n_6_69 -- 2nd level issue --> n_6_93
+  n_6_93 --> n_6_146
+  n_6_146 --> n_6_580
+  n_6_465 --> n_6_529
+  n_6_529 --> n_6_69
+  n_6_580 --> n_6_631
+  n_6_1049 --> n_6_1062
+  n_6_1062 --> n_6_1113
+  n_6_1113 -- no --> n_6_1186
+  n_6_1113 -- yes --> n_6_1135
+  n_6_1186 --> n_6_1237
+  n_6_1135 --> n_6_1337
+  n_6_1237 --> n_6_1135
+  n_6_171 --> n_6_267
+  n_6_190 -- Issue resolved --> n_6_740
+  n_6_190 -- Fix in Next release --> n_6_214
+  n_6_267 --> n_6_190
+  n_6_214 --> n_6_740
+  n_6_654 --> n_6_667
+  n_6_667 --> n_6_718
+  n_6_718 -- no --> n_6_267
+  n_6_718 -- yes --> n_6_791
+  n_6_791 --> n_6_171
+  n_6_740 --> n_6_842
+  n_6_791 -.-> n_6_864
+  n_6_928 -.-> n_6_171
+  n_6_1186 -.-> n_6_465
+  n_6_580 -.-> n_6_1237
+  n_6_93 -.-> n_6_654
+  n_6_740 -.-> n_6_146

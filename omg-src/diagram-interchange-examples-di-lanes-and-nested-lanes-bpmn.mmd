@@ -1,0 +1,13 @@
+bpmn-beta LR
+  lane "Lane 1"
+    manual task Task_ManualTask "Manual Task"
+  lane "Lane 2"
+  lane "Lane 2 - 2"
+    user task Task_UserTask "User Task"
+    data DataObject_Document "Document"
+  lane "Lane 2 - 1"
+    subprocess SubProcess_SubProcess "Sub Process"
+  lane "Other"
+    data DO1276094698063 "Document"
+  Task_ManualTask -- a --> SubProcess_SubProcess
+  SubProcess_SubProcess -- b --> Task_UserTask

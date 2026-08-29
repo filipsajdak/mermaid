@@ -1,0 +1,36 @@
+bpmn-beta LR
+  pool "Seller"
+    receive task receiveQuoteRequest "Receive Quote Request"
+    xor decision1 "gateway"
+    send task sendQuote "Send Quote"
+    send task sendFault "Send Fault"
+    receive task receiveNewQuoteRequest "Receive New Quote"
+    event-gateway eventWait "gateway"
+    intermediate timer timeout "intermediate"
+    end end1 "end"
+    receive task receiveOrderRequest "Receive Order Request"
+    and fork "gateway"
+    send task sendOrderResponse "Send Order Response"
+    send task sendShippingRequest "Send Shipping Request"
+    receive task receiveShippingConfirmation "Receive Shipping Confirmation"
+    and join "gateway"
+    end end2 "end"
+  pool "Buyer"
+  pool "Shipper"
+  receiveQuoteRequest --> decision1
+  decision1 --> sendQuote
+  decision1 --> sendFault
+  sendQuote --> eventWait
+  receiveNewQuoteRequest --> decision1
+  sendFault --> eventWait
+  eventWait --> receiveNewQuoteRequest
+  eventWait --> receiveOrderRequest
+  eventWait --> timeout
+  timeout --> end1
+  receiveOrderRequest --> fork
+  fork --> sendOrderResponse
+  fork --> sendShippingRequest
+  sendOrderResponse --> join
+  sendShippingRequest --> receiveShippingConfirmation
+  receiveShippingConfirmation --> join
+  join --> end2

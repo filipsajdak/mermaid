@@ -1,0 +1,31 @@
+bpmn-beta LR
+  pool "VIP customer"
+  pool "Software Company"
+    lane "Account Manager"
+      start message n_6_81 "question received"
+      task n_6_94 "handle question"
+      xor n_6_196 "can handle myself?"
+      task n_6_313 "Explain solution"
+      end n_6_423 "end"
+    lane "1st level support"
+      task n_6_333 "Handle 1st level issue"
+      xor n_6_263 "Finished?"
+    lane "2nd level support"
+      task n_6_63 "Handle 2nd level issue"
+      xor n_6_289 "Unsure?"
+    lane "Software development"
+      task n_6_190 "Provide feedback"
+    lane "Other"
+      note n_6_1361 "Sometimes opinion of development is needed"
+  n_6_263 -- no --> n_6_63
+  n_6_289 -- Yes --> n_6_190
+  n_6_263 -- Yes --> n_6_313
+  n_6_289 -- No --> n_6_313
+  n_6_190 --> n_6_313
+  n_6_63 --> n_6_289
+  n_6_313 --> n_6_423
+  n_6_81 --> n_6_94
+  n_6_94 --> n_6_196
+  n_6_196 -- Yes --> n_6_313
+  n_6_196 -- No --> n_6_333
+  n_6_333 --> n_6_263

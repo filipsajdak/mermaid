@@ -1,0 +1,24 @@
+bpmn-beta LR
+  pool "Buyer"
+    start StartProcess "start"
+    task TaskQuotationHandling "Quotation Handling"
+    xor GatewayOrderApprovedDecision "gateway"
+    task n_6_190 "Order Handling"
+    task n_6_241 "Shipping Handling"
+    user task TaskReviewOrder "Review Order"
+    end EndProcess "end"
+    and ParaSplitOrderAndShipment "gateway"
+    and ParaJoinOderAndShipment "gateway"
+    end terminate TerminateProcess "end"
+    user task TaskApproveOrder "Approve Order"
+  StartProcess --> TaskQuotationHandling
+  TaskQuotationHandling --> TaskApproveOrder
+  TaskApproveOrder --> GatewayOrderApprovedDecision
+  GatewayOrderApprovedDecision -- Approved --> ParaSplitOrderAndShipment
+  ParaSplitOrderAndShipment --> n_6_190
+  ParaSplitOrderAndShipment --> n_6_241
+  n_6_190 --> ParaJoinOderAndShipment
+  n_6_241 --> ParaJoinOderAndShipment
+  ParaJoinOderAndShipment --> TaskReviewOrder
+  TaskReviewOrder --> EndProcess
+  GatewayOrderApprovedDecision --> TerminateProcess

@@ -1,0 +1,6 @@
+bpmn-beta LR
+  start StartEvent_StartEvent "StartEvent"
+  subprocess SubProcess_SubProcess "SubProcess"
+  end EndEvent_EndEvent "EndEvent"
+  StartEvent_StartEvent -- a --> SubProcess_SubProcess
+  SubProcess_SubProcess -- d --> EndEvent_EndEvent

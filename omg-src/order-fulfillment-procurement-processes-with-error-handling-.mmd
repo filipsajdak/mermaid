@@ -1,0 +1,53 @@
+bpmn-beta LR
+  start message n_6_53 "Order received"
+  task n_6_66 "Check availability"
+  xor n_6_117 "Article available"
+  call n_6_143 "Procurement"
+    boundary escalation n_6_251 "Late delivery"
+    boundary error n_6_406 "undeliverable"
+  task n_6_196 "Ship article"
+  task n_6_268 "Inform customer"
+  end n_6_319 "Customer informed"
+  subprocess n_6_337 "Financial settlement"
+  end n_6_388 "Payment received"
+  task n_6_423 "Inform customer"
+  task n_6_474 "Remove article from calatogue"
+  end n_6_525 "Article removed"
+  start n_0_2 "start"
+  task n_0_15 "Check availability with supplier"
+  xor n_0_68 "Deliverable?"
+  throw escalation n_0_141 "Late delivery"
+  end n_0_158 "Article procured"
+  end error n_0_180 "undeliverable"
+  intermediate message n_0_90 "article received"
+  task n_0_107 "Order from supplier"
+  start conditional n_1_2 "Stock level below minimum"
+  call n_1_15 "Procurement"
+    boundary error n_1_84 "undeliverable"
+  end n_1_66 "Article procured"
+  task n_1_101 "Remove article from catalogue"
+  end n_1_152 "Article removed"
+  n_6_53 --> n_6_66
+  n_6_66 --> n_6_117
+  n_6_117 -- no --> n_6_143
+  n_6_117 -- yes --> n_6_196
+  n_6_143 --> n_6_196
+  n_6_251 --> n_6_268
+  n_6_268 --> n_6_319
+  n_6_196 --> n_6_337
+  n_6_337 --> n_6_388
+  n_6_406 --> n_6_423
+  n_6_423 --> n_6_474
+  n_6_474 --> n_6_525
+  n_0_2 --> n_0_15
+  n_0_15 --> n_0_68
+  n_0_68 -- > 2 days --> n_0_141
+  n_0_68 -- < = 2 days --> n_0_107
+  n_0_141 --> n_0_107
+  n_0_68 -- no --> n_0_180
+  n_0_90 --> n_0_158
+  n_0_107 --> n_0_90
+  n_1_2 --> n_1_15
+  n_1_15 --> n_1_66
+  n_1_84 --> n_1_101
+  n_1_101 --> n_1_152

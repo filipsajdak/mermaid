@@ -1,0 +1,41 @@
+bpmn-beta LR
+  pool "Hardware Retailer"
+    lane "Logistics Manager"
+      task n_6_452 "Take out extra insurance"
+    lane "Clerk"
+      start n_6_67 "Goods to ship"
+      and n_6_80 "gateway"
+      task n_6_102 "Decide if normal post or special shipment"
+      xor n_6_204 "Mode of delivery"
+      task n_6_226 "Request quotes from carriers"
+      task n_6_277 "Assign a carrier & prepare paperwork"
+      task n_6_328 "Fill in a Post label"
+      task n_6_379 "Check if extra insurance is necessary"
+      or n_6_430 "gateway"
+      or n_6_503 "gateway"
+      xor n_6_525 "gateway"
+    lane "Warehouse Worker"
+      task n_6_153 "Package goods"
+      and n_6_547 "gateway"
+      task n_6_569 "Add paperwork and move package to pick area"
+      end n_6_620 "Goods available for pick"
+    lane "Other"
+      note n_6_670 "Insurance is included in carrier service"
+  n_6_67 --> n_6_80
+  n_6_80 --> n_6_102
+  n_6_102 --> n_6_204
+  n_6_204 -- Special Carrier --> n_6_226
+  n_6_204 -- Normal Post --> n_6_379
+  n_6_379 --> n_6_430
+  n_6_430 -- extra insurance required --> n_6_452
+  n_6_430 -- Always --> n_6_328
+  n_6_328 --> n_6_503
+  n_6_452 --> n_6_503
+  n_6_503 --> n_6_525
+  n_6_226 --> n_6_277
+  n_6_277 --> n_6_525
+  n_6_525 --> n_6_547
+  n_6_153 --> n_6_547
+  n_6_547 --> n_6_569
+  n_6_569 --> n_6_620
+  n_6_80 --> n_6_153

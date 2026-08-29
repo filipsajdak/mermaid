@@ -1,0 +1,55 @@
+bpmn-beta LR
+  pool "Voting Members"
+  pool "Pool"
+    data n_1276277380518 "Issue List"
+    data n_1276277380522 "Issue Votes"
+    data DO1276277381221 "Warning Text"
+    data DO1276277381447 "Member Vote"
+    data DO1276277381448 "Issue Votes"
+    start timer n_6_53 "Friday"
+    user task n_6_66 "Review Issue List"
+    xor n_6_117 "Are issues ready?"
+    end n_6_153 "end"
+    subprocess n_6_173 "Discussion Cycle"
+    send task n_6_727 "Announce Issues for Vote"
+    subprocess n_6_794 "Collect Votes"
+    user task n_6_1391 "Prepare Results"
+    user task n_6_1442 "Post Results on Web Site"
+    send task n_6_1493 "E-mail Results of Vote"
+    and n_6_1544 "gateway"
+    xor n_6_1566 "Did Enough Members Vote?"
+    user task n_6_1588 "Reduce number of Voting Members and Recalculate Vote"
+    xor n_6_1639 "Have the Members been warned?"
+    send task n_6_1661 "Re-announce Vote with Warning to Voting Members"
+    xor n_6_1752 "Issues w/o Majority?"
+    xor n_6_1804 "2nd Time"
+    end n_6_1826 "end"
+    subprocess n_6_1844 "activity"
+    data n_6_1732 "Issue Votes"
+    data n_6_1784 "Warning Text"
+    data n_6_2007 "Issue Votes"
+    data n_6_2027 "Issue Votes"
+    data n_6_2043 "Issue Votes"
+  n_6_53 --> n_6_66
+  n_6_66 --> n_6_117
+  n_6_117 -- No --> n_6_153
+  n_6_117 -- Yes --> n_6_173
+  n_6_173 --> n_6_727
+  n_6_1391 --> n_6_1442
+  n_6_1391 --> n_6_1493
+  n_6_1442 --> n_6_1544
+  n_6_1493 --> n_6_1544
+  n_6_1544 --> n_6_1566
+  n_6_794 --> n_6_1391
+  n_6_727 --> n_6_794
+  n_6_1566 -- No --> n_6_1639
+  n_6_1566 -- Yes --> n_6_1752
+  n_6_1639 -- Yes --> n_6_1588
+  n_6_1639 -- No --> n_6_1661
+  n_6_1661 --> n_6_794
+  n_6_1588 --> n_6_1752
+  n_6_1752 -- No --> n_6_1826
+  n_6_1752 -- Yes --> n_6_1804
+  n_6_1804 -- No --> n_6_1844
+  n_6_1844 --> n_6_727
+  n_6_1804 -- Yes --> n_6_173

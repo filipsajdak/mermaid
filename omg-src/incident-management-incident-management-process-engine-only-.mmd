@@ -1,0 +1,25 @@
+bpmn-beta LR
+  pool "Trouble Ticket System"
+    lane "1st level support"
+      start message n_1_13 "Issue received"
+      script task n_1_26 "Open ticket"
+      user task n_1_77 "edit 1st level ticket"
+      xor n_1_128 "Result?"
+      send task n_1_150 "Send mail to account manager"
+      script task n_1_201 "Close ticket"
+      end n_1_376 "end"
+    lane "2nd level support"
+      user task n_1_252 "edit 2nd level ticket"
+      xor n_1_303 "Result?"
+      service task n_1_325 "Insert issue into product backlog"
+  n_1_13 --> n_1_26
+  n_1_26 --> n_1_77
+  n_1_77 --> n_1_128
+  n_1_128 -- Issue resolved --> n_1_150
+  n_1_150 --> n_1_201
+  n_1_201 --> n_1_376
+  n_1_128 -- 2nd level issue --> n_1_252
+  n_1_252 --> n_1_303
+  n_1_303 -- Issue resolved --> n_1_150
+  n_1_325 --> n_1_150
+  n_1_303 -- Fix in Next release --> n_1_325

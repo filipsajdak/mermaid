@@ -1,0 +1,18 @@
+bpmn-beta LR
+  pool "Key account manager"
+    start message n_0_9 "Customer has a problem"
+    manual task n_0_22 "Get problem description"
+    xor n_0_73 "Can handle myself?"
+    manual task n_0_95 "Explain solution"
+    manual task n_0_146 "Send mail to support system"
+    intermediate message n_0_197 "Answer received"
+    end n_0_226 "end"
+  pool "Trouble Ticket System"
+  pool "VIP customer"
+  n_0_9 --> n_0_22
+  n_0_22 --> n_0_73
+  n_0_73 -- no --> n_0_146
+  n_0_73 -- yes --> n_0_95
+  n_0_146 --> n_0_197
+  n_0_197 --> n_0_95
+  n_0_95 --> n_0_226

@@ -1,0 +1,48 @@
+bpmn-beta LR
+  pool "Pizza Customer"
+    start n_6_61 "Hungry for pizza"
+    task n_6_74 "Select a pizza"
+    task n_6_127 "Order a pizza"
+    event-gateway n_6_180 "gateway"
+    intermediate message n_6_202 "pizza received"
+    intermediate timer n_6_219 "60 minutes"
+    task n_6_236 "Ask for the pizza"
+    task n_6_304 "Pay the pizza"
+    task n_6_355 "Eat the pizza"
+    end n_6_406 "Hunger satisfied"
+  pool "Pizza vendor"
+    lane "clerk"
+      start message n_6_450 "Order received"
+      and n_6_652 "gateway"
+      intermediate message n_6_674 "„where is my pizza?“"
+      task n_6_695 "Calm customer"
+    lane "pizza chef"
+      task n_6_463 "Bake the pizza"
+    lane "delivery boy"
+      task n_6_514 "Deliver the pizza"
+      task n_6_565 "Receive payment"
+      end terminate n_6_616 "end"
+  n_6_450 --> n_6_652
+  n_6_463 --> n_6_514
+  n_6_514 --> n_6_565
+  n_6_565 --> n_6_616
+  n_6_652 --> n_6_674
+  n_6_652 --> n_6_463
+  n_6_695 --> n_6_674
+  n_6_674 --> n_6_695
+  n_6_61 --> n_6_74
+  n_6_74 --> n_6_127
+  n_6_127 --> n_6_180
+  n_6_180 --> n_6_202
+  n_6_180 --> n_6_219
+  n_6_219 --> n_6_236
+  n_6_202 --> n_6_304
+  n_6_236 --> n_6_180
+  n_6_304 --> n_6_355
+  n_6_355 --> n_6_406
+  n_6_127 -.-> n_6_450
+  n_6_236 -.-> n_6_674
+  n_6_565 -.-> n_6_304
+  n_6_304 -.-> n_6_565
+  n_6_514 -.-> n_6_202
+  n_6_695 -.-> n_6_236

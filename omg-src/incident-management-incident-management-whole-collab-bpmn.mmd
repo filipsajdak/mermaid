@@ -1,0 +1,81 @@
+bpmn-beta LR
+  pool "VIP customer"
+  pool "Key account manager"
+    start message n_6_1049 "Customer has a problem"
+    manual task n_6_1062 "Get problem description"
+    xor n_6_1113 "Can handle myself?"
+    manual task n_6_1135 "Explain solution"
+    manual task n_6_1186 "Send mail to support system"
+    intermediate message n_6_1237 "Answer received"
+    end n_6_1337 "end"
+  pool "Trouble Ticket System"
+    lane "1st level support"
+      start message n_6_81 "Issue received"
+      script task n_6_94 "Open ticket"
+      user task n_6_145 "edit 1st level ticket"
+      xor n_6_196 "Result?"
+      send task n_6_218 "Send mail to account manager"
+      script task n_6_269 "Close ticket"
+      end n_6_320 "end"
+    lane "2nd level support"
+      user task n_6_333 "edit 2nd level ticket"
+      xor n_6_384 "Result?"
+      service task n_6_406 "Insert issue into product backlog"
+  pool "1st Level Support Agent"
+    start message n_6_465 "Ticket received"
+    manual task n_6_478 "Classify ticket"
+    manual task n_6_529 "Handle 1st level issue"
+    manual task n_6_580 "Document 1st level result"
+    end n_6_631 "end"
+  pool "2nd level support agent"
+    start message n_6_654 "Ticket received"
+    manual task n_6_667 "Handle 2nd level issue"
+    xor n_6_718 "Unsure?"
+    manual task n_6_740 "Document 2nd level result"
+    manual task n_6_791 "Ask developer"
+    end n_6_842 "end"
+    note n_6_1363 "Sometimes opinion of development is needed"
+  pool "Software developer"
+    start message n_6_864 "Request from support"
+    manual task n_6_877 "Examine problem"
+    manual task n_6_928 "Provide feedback for 2nd level support"
+    end n_6_979 "end"
+  n_6_864 --> n_6_877
+  n_6_877 --> n_6_928
+  n_6_928 --> n_6_979
+  n_6_81 --> n_6_94
+  n_6_94 --> n_6_145
+  n_6_145 --> n_6_196
+  n_6_196 -- Issue resolved --> n_6_218
+  n_6_218 --> n_6_269
+  n_6_269 --> n_6_320
+  n_6_196 -- 2nd level issue --> n_6_333
+  n_6_333 --> n_6_384
+  n_6_384 -- Issue resolved --> n_6_218
+  n_6_406 --> n_6_218
+  n_6_384 -- Fix in Next release --> n_6_406
+  n_6_465 --> n_6_478
+  n_6_478 --> n_6_529
+  n_6_529 --> n_6_580
+  n_6_580 --> n_6_631
+  n_6_1049 --> n_6_1062
+  n_6_1062 --> n_6_1113
+  n_6_1113 -- no --> n_6_1186
+  n_6_1113 -- yes --> n_6_1135
+  n_6_1186 --> n_6_1237
+  n_6_1237 --> n_6_1135
+  n_6_1135 --> n_6_1337
+  n_6_654 --> n_6_667
+  n_6_667 --> n_6_718
+  n_6_718 -- no --> n_6_740
+  n_6_718 -- yes --> n_6_791
+  n_6_791 --> n_6_740
+  n_6_740 --> n_6_842
+  n_6_791 -.-> n_6_864
+  n_6_928 -.-> n_6_791
+  n_6_145 -.-> n_6_465
+  n_6_580 -.-> n_6_145
+  n_6_333 -.-> n_6_654
+  n_6_740 -.-> n_6_333
+  n_6_1186 -.-> n_6_81
+  n_6_218 -.-> n_6_1237
