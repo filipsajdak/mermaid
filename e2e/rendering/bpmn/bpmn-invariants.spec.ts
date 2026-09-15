@@ -20,16 +20,51 @@ const asMermaidElementSource = (source: string): string =>
  */
 const CONNECTORS = ['-->', '-.->', '..>', '...'];
 
-/** The ids a fixture declares, and which of them the notation draws on a border. */
+/**
+ * The same connectors as one pattern, tried in the order the lexer tries them: a labelled
+ * arrow swallows its own label, and an association that points is told from one that does
+ * not by the head it ends with.
+ */
+const CONNECTOR = /--(?![>-])[^\n\r]*?--+>|-\.->|--+>|\.\.+>|\.\.\.+/g;
+
+/**
+ * The ids a fixture declares, which of them the notation draws on a border, and the pair
+ * of ends each flow names.
+ *
+ * The ends are read from the source rather than from the drawing, because that is the
+ * question being asked: a line is docked when it reaches the shape its author named, and
+ * a drawing that has forgotten which shape that was cannot be asked.
+ */
 function declared(source: string) {
   const ids: string[] = [];
   const onABorder: string[] = [];
+  const flows: [string, string][] = [];
+  let inADescription = false;
   for (const raw of source.split('\n')) {
     const line = raw.trim();
+    // A braced description is prose, and prose is written with ellipses that read as
+    // connectors.
+    if (inADescription) {
+      inADescription = !line.includes('}');
+      continue;
+    }
+    if (/^accDescr\s*{/.test(line) && !line.includes('}')) {
+      inADescription = true;
+      continue;
+    }
     if (!line || line.startsWith('bpmn-beta') || /^(title|accTitle|accDescr)\b/.test(line)) {
       continue;
     }
     if (CONNECTORS.some((connector) => line.includes(connector))) {
+      // A chain reads left to right, which is the order the parser records it in, so the
+      // nth pair here is the nth flow and carries the nth edge id.
+      const chain = line
+        .split(CONNECTOR)
+        .map((part) => part.trim())
+        .filter(Boolean);
+      for (let i = 1; i < chain.length; i++) {
+        flows.push([chain[i - 1], chain[i]]);
+      }
       continue;
     }
     const named = /^(?:[a-z][a-z-]*\s+)*?([A-Z_a-z]\w*)\s+"/.exec(line);
@@ -40,7 +75,7 @@ function declared(source: string) {
       }
     }
   }
-  return { ids, onABorder };
+  return { ids, onABorder, flows };
 }
 
 /**
@@ -90,6 +125,22 @@ async function measure(page: Page, spec: ReturnType<typeof declared>) {
       });
     }
 
+    // A band is sized from its content and drawn as a cluster rather than a node, so a
+    // flow that ends on one has to be measured against the body rect it leaves behind.
+    const bands = new Map();
+    for (const band of document.querySelectorAll('g.cluster.swimlane')) {
+      const body = band.querySelector('rect.pool-body') ?? band.querySelector('rect.swimlane-body');
+      const raw = band.getAttribute('id') ?? '';
+      if (!body) {
+        continue;
+      }
+      const left = Number(body.getAttribute('x'));
+      const top = Number(body.getAttribute('y'));
+      const width = Number(body.getAttribute('width'));
+      const height = Number(body.getAttribute('height'));
+      bands.set(raw, { x: left + width / 2, y: top + height / 2, w: width, h: height });
+    }
+
     const edges = [];
     for (const path of document.querySelectorAll('g.edgePaths path')) {
       const raw = path.getAttribute('data-points');
@@ -97,8 +148,11 @@ async function measure(page: Page, spec: ReturnType<typeof declared>) {
         continue;
       }
       const points = JSON.parse(atob(raw)).map((p: { x: number; y: number }) => [p.x, p.y]);
+      // The db names an edge for its place in the flow list, which is the order the
+      // fixture was read in, so that index is what ties a drawn path back to its ends.
+      const at = /bpmn-edge-(\d+)$/.exec(path.getAttribute('data-id') ?? '');
       if (points.length >= 2) {
-        edges.push(points);
+        edges.push({ points, ends: at ? declaration.flows[Number(at[1])] : undefined });
       }
     }
 
@@ -140,26 +194,51 @@ async function measure(page: Page, spec: ReturnType<typeof declared>) {
       }
     }
 
+    const shapeById = new Map();
+    for (const shape of shapes) {
+      if (shape.id) {
+        shapeById.set(shape.id, shape);
+      }
+    }
+    const targetFor = (name: string | undefined) => {
+      if (!name) {
+        return undefined;
+      }
+      const node = shapeById.get(name);
+      if (node) {
+        return node;
+      }
+      for (const [raw, band] of bands) {
+        if (raw === name || raw.endsWith('-' + name)) {
+          return band;
+        }
+      }
+      return undefined;
+    };
+
     let looseEnds = 0;
     let slantedEnds = 0;
     let throughAShape = 0;
-    for (const points of edges) {
-      for (const [end, inner] of [
-        [points[0], points[1]],
-        [points.at(-1), points.at(-2)],
+    let unnamedEnds = 0;
+    for (const { points, ends } of edges) {
+      for (const [end, inner, named] of [
+        [points[0], points[1], ends?.[0]],
+        [points.at(-1), points.at(-2), ends?.[1]],
       ]) {
-        let nearest = Infinity;
-        for (const shape of shapes) {
-          nearest = Math.min(
-            nearest,
-            Math.max(
-              Math.abs(end[0] - shape.x) - shape.w / 2,
-              Math.abs(end[1] - shape.y) - shape.h / 2
-            )
+        // Against the shape the flow names, not the nearest one. Nearest calls an arrow
+        // docked for stopping beside something its author never mentioned, which is how
+        // a line that reaches nothing reads as a line that reaches everything.
+        const target = targetFor(named);
+        if (target) {
+          const gap = Math.max(
+            Math.abs(end[0] - target.x) - target.w / 2,
+            Math.abs(end[1] - target.y) - target.h / 2
           );
-        }
-        if (nearest > 10) {
-          looseEnds++;
+          if (gap > 10) {
+            looseEnds++;
+          }
+        } else {
+          unnamedEnds++;
         }
         if (Math.abs(end[0] - inner[0]) > 2 && Math.abs(end[1] - inner[1]) > 2) {
           slantedEnds++;
@@ -192,6 +271,7 @@ async function measure(page: Page, spec: ReturnType<typeof declared>) {
       shapeOverlaps,
       captionOverlaps,
       looseEnds,
+      unnamedEnds,
       slantedEnds,
       throughAShape,
       titleInsideDrawing: Boolean(title && drawn && Number(title.getAttribute('y')) > drawn.y),
@@ -213,6 +293,9 @@ test.describe('bpmn-beta invariants', () => {
       // Every line ends on the shape it names, square to the border it meets, and
       // reaches it without passing through anything on the way.
       expect(seen.looseEnds).toBe(0);
+      // An end that cannot be tied back to what the fixture named is not a pass: it
+      // means the measurement missed the flow, so nothing about it was checked.
+      expect(seen.unnamedEnds).toBe(0);
       expect(seen.slantedEnds).toBe(0);
       expect(seen.throughAShape).toBe(0);
       expect(seen.titleInsideDrawing).toBe(false);
