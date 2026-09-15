@@ -73,6 +73,49 @@ describe('participants are drawn apart', () => {
     expect(layout.nodes[0].x).toBe(100);
     expect(layout.nodes[1].x).toBe(300 + PARTICIPANT_GAP);
   });
+
+  it('carries a flow between two participants with the bands it runs through', () => {
+    // p1 spans 0..80 and p2 spans 80..160, so the flow leaves one band at y=70 and
+    // arrives in the other at y=130.
+    const layout = asLayout(
+      [
+        band('p1', 40, 80, 'pool'),
+        band('p2', 120, 80, 'pool'),
+        inside('a', 'p1', 40),
+        inside('b', 'p2', 120),
+      ],
+      [
+        link('message', 'a', 'b', [
+          { x: 100, y: 70 },
+          { x: 100, y: 130 },
+        ]),
+      ]
+    );
+    separateParticipants(layout, 'LR');
+    const y = Object.fromEntries(layout.nodes.map((n) => [n.id, n.y]));
+    expect(y.a).toBe(40);
+    expect(y.b).toBe(120 + PARTICIPANT_GAP);
+    // The end in the band that moved moves with it; the other one stays put.
+    expect(layout.edges[0].points!.map((p) => p.y)).toEqual([70, 130 + PARTICIPANT_GAP]);
+    // And the segment crossing between them is still vertical, only longer.
+    expect(layout.edges[0].points!.map((p) => p.x)).toEqual([100, 100]);
+  });
+
+  it('leaves a flow alone when one of its ends is in no participant at all', () => {
+    const loose = { id: 'x', isGroup: false, x: 100, y: 300, width: 60, height: 40 } as Node;
+    const routed = [
+      { x: 100, y: 130 },
+      { x: 100, y: 300 },
+    ];
+    const layout = asLayout(
+      [band('p1', 40, 80, 'pool'), band('p2', 120, 80, 'pool'), inside('b', 'p2', 120), loose],
+      [link('stray', 'b', 'x', routed)]
+    );
+    separateParticipants(layout, 'LR');
+    // `x` never moved, so moving the line to follow `b` would only pull the other end
+    // away from it.
+    expect(layout.edges[0].points).toEqual(routed);
+  });
 });
 
 describe('a link ending on a participant', () => {
