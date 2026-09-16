@@ -45,6 +45,20 @@ export function separateSharedRenderedTerminalLanes(
 ): void {
   const MIN_FACE_CLEARANCE = 16;
   const TRACK_SHIFT = 7;
+  /**
+   * How far from a corner a shape will actually accept a line.
+   *
+   * A shape docks a line onto the usable part of a face, holding it off the corners by
+   * this much (`CORNER_INSET` in the BPMN shape core). Moving a terminal rail nearer the
+   * corner than that is moving it somewhere the shape will not meet it: the dock pulls it
+   * back along the face afterwards, and the last segment, which had been square to the
+   * border, is left running along it with the arrowhead lying flat.
+   */
+  const FACE_CORNER_INSET = 8;
+  const usableFace = (low: number, high: number) => {
+    const inset = Math.min(FACE_CORNER_INSET, (high - low) / 4);
+    return { low: low + inset, high: high - inset };
+  };
 
   interface TerminalLane {
     edge: MaterializedEdge;
@@ -208,10 +222,11 @@ export function separateSharedRenderedTerminalLanes(
         Math.abs(lane.boundary.y - lane.rect.top) < 1 ||
         Math.abs(lane.boundary.y - lane.rect.bottom) < 1
       ) {
+        const span = usableFace(lane.rect.left, lane.rect.right);
         return (
           sameY(shiftedBoundary, lane.boundary, EPS_LOCAL) &&
-          shiftedBoundary.x >= lane.rect.left + 1 &&
-          shiftedBoundary.x <= lane.rect.right - 1
+          shiftedBoundary.x >= span.low &&
+          shiftedBoundary.x <= span.high
         );
       }
 
@@ -219,10 +234,11 @@ export function separateSharedRenderedTerminalLanes(
         Math.abs(lane.boundary.x - lane.rect.left) < 1 ||
         Math.abs(lane.boundary.x - lane.rect.right) < 1
       ) {
+        const span = usableFace(lane.rect.top, lane.rect.bottom);
         return (
           sameX(shiftedBoundary, lane.boundary, EPS_LOCAL) &&
-          shiftedBoundary.y >= lane.rect.top + 1 &&
-          shiftedBoundary.y <= lane.rect.bottom - 1
+          shiftedBoundary.y >= span.low &&
+          shiftedBoundary.y <= span.high
         );
       }
 
