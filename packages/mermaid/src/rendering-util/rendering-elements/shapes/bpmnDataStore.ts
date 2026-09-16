@@ -51,7 +51,13 @@ export async function bpmnDataStore<T extends SVGGraphicsElement>(
   if (hasLabel) {
     positionLabelBelow(label, bbox, half + LABEL_GAP + bbox.height / 2);
   }
-  reserveBounds(shapeSvg, node, totalWidth, totalHeight);
+  // The caption stands in a band below the mark, so the room reserved is taller than
+  // anything drawn. Recording what is drawn lets a line stop on the mark rather than
+  // on the empty band beside it.
+  reserveBounds(shapeSvg, node, totalWidth, totalHeight, {
+    width: STORE_SIZE,
+    height: STORE_SIZE,
+  });
 
   node.intersect = function (point) {
     return faceProjectIntersect(node, STORE_SIZE, STORE_SIZE, point);
