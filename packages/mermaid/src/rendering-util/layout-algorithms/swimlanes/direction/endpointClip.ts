@@ -531,8 +531,21 @@ type VertexSide = (typeof VERTEX_SIDES)[number];
  * A rhombus does. Scoped to the shapes that also carry a drawn extent, so a shape whose
  * box is the mark it draws keeps the geometry its own routes were tuned against.
  */
+const POINTED_SHAPES = new Set([
+  'bpmn-gateway',
+  'bpmn-start',
+  'bpmn-intermediate',
+  'bpmn-boundary',
+  'bpmn-end',
+]);
+
 function meetsAtVertices(node: any): boolean {
-  return node?.shape === 'bpmn-gateway' && Boolean(node?.metadata?.drawnExtent);
+  return POINTED_SHAPES.has(node?.shape) && Boolean(node?.metadata?.drawnExtent);
+}
+
+/** Whether a shape's corners must be shared out, one line to each. */
+function wantsOneLinePerCorner(node: any): boolean {
+  return node?.shape === 'bpmn-gateway';
 }
 
 function vertexOf(node: any, side: VertexSide): Point | undefined {
@@ -625,7 +638,13 @@ export function meetDiamondsAtTheirVertex(edges: unknown[], nodeByIdMap: Map<str
 
     for (const contact of ordered) {
       const prefs = preferredSides(node, contact.neighbour);
-      const side = prefs.find((s) => !taken.has(s)) ?? prefs[0];
+      // A gateway hands its corners out one to a line, so an answer never leaves by the
+      // point its question arrived at. A ring has no such reading to protect: two flows
+      // converging on an end event is how the notation draws them, and sending one round
+      // to another side to avoid sharing would say something the diagram does not mean.
+      const side = wantsOneLinePerCorner(node)
+        ? (prefs.find((s) => !taken.has(s)) ?? prefs[0])
+        : prefs[0];
       taken.add(side);
       const vertex = vertexOf(node, side);
       const points = contact.edge.points;
