@@ -2,6 +2,7 @@
 import type { LayoutData } from '../../types.js';
 import {
   clipEdgeEndpointsToNodeBoundaries,
+  meetDiamondsAtTheirVertex,
   prepareEdgeEndpointsForRenderer,
 } from './direction/endpointClip.js';
 import { orthogonalizePolyline, simplifyPolyline } from './direction/geometry.js';
@@ -178,4 +179,12 @@ export function postProcessSwimlaneLayout(layout: LayoutData, direction?: string
   // the edges again.
   liftTopLaneTitleBandsAboveRails(edges, nodeByIdMap);
   shiftLeftLaneTitleBandsLeftOfRails(edges, nodeByIdMap);
+
+  // Last, once every rail is settled: bring the lines touching a rhombus onto its four
+  // corners. Running earlier would let a later pass slide an endpoint back along a side
+  // the shape does not in fact have there.
+  meetDiamondsAtTheirVertex(edges, nodeByIdMap);
+  // That drops the run a line used to make out of the shape, so a label placed against
+  // the old polyline is left standing where the line no longer goes.
+  anchorLabelsToPolyline(edges, nodeByIdMap);
 }

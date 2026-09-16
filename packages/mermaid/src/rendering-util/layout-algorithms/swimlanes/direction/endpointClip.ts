@@ -493,3 +493,168 @@ export function prepareEdgeEndpointsForRenderer(edges: unknown[], nodeByIdMap: M
     context.edge.points = duplicated;
   }
 }
+
+/**
+ * Drops a point the line runs past and comes back from.
+ *
+ * Bringing a line onto a corner can leave the rail it used to start at sitting behind the
+ * new one: three points on a line, the middle of them not between the other two. The run
+ * out to it and back is drawn as a step beside the shape, and it is never load bearing -
+ * removing it keeps the line inside the ground it already covered.
+ */
+function dropAxisBacktracks(points: Point[]): Point[] {
+  const out = [...points];
+  let i = 1;
+  while (i < out.length - 1) {
+    const [a, b, c] = [out[i - 1], out[i], out[i + 1]];
+    const flat = Math.abs(a.y - b.y) < 1e-6 && Math.abs(b.y - c.y) < 1e-6;
+    const upright = Math.abs(a.x - b.x) < 1e-6 && Math.abs(b.x - c.x) < 1e-6;
+    const backtracks =
+      (flat && (b.x - a.x) * (c.x - b.x) < 0) || (upright && (b.y - a.y) * (c.y - b.y) < 0);
+    if (backtracks) {
+      out.splice(i, 1);
+      i = Math.max(1, i - 1);
+      continue;
+    }
+    i++;
+  }
+  return out;
+}
+
+/** The four points where a rhombus touches the box that contains it. */
+const VERTEX_SIDES = ['top', 'bottom', 'left', 'right'] as const;
+type VertexSide = (typeof VERTEX_SIDES)[number];
+
+/**
+ * Whether a node's outline meets its box only at the midpoint of each side.
+ *
+ * A rhombus does. Scoped to the shapes that also carry a drawn extent, so a shape whose
+ * box is the mark it draws keeps the geometry its own routes were tuned against.
+ */
+function meetsAtVertices(node: any): boolean {
+  return node?.shape === 'bpmn-gateway' && Boolean(node?.metadata?.drawnExtent);
+}
+
+function vertexOf(node: any, side: VertexSide): Point | undefined {
+  const drawn = node?.metadata?.drawnExtent;
+  const cx = node?.x;
+  const cy = node?.y;
+  if (typeof cx !== 'number' || typeof cy !== 'number' || !drawn) {
+    return undefined;
+  }
+  const halfWidth = (drawn.width ?? 0) / 2;
+  const halfHeight = (drawn.height ?? 0) / 2;
+  if (halfWidth <= 0 || halfHeight <= 0) {
+    return undefined;
+  }
+  switch (side) {
+    case 'top':
+      return { x: cx, y: cy - halfHeight };
+    case 'bottom':
+      return { x: cx, y: cy + halfHeight };
+    case 'left':
+      return { x: cx - halfWidth, y: cy };
+    case 'right':
+      return { x: cx + halfWidth, y: cy };
+  }
+}
+
+/** The corners a line coming from `toward` would prefer, best first. */
+function preferredSides(node: any, toward: Point): VertexSide[] {
+  const dx = toward.x - (node?.x ?? 0);
+  const dy = toward.y - (node?.y ?? 0);
+  const score: Record<VertexSide, number> = {
+    right: dx,
+    left: -dx,
+    bottom: dy,
+    top: -dy,
+  };
+  return [...VERTEX_SIDES].sort((a, b) => score[b] - score[a]);
+}
+
+/**
+ * Brings every line into a rhombus at one of its four corners, one line to a corner.
+ *
+ * Each side of a diamond closes to a single point, so a line stopping anywhere else along
+ * a side stops beside the shape rather than on it, and the run from there across to the
+ * corner the renderer docks at is the hook a reader sees under the mark. A line going up
+ * meets the top corner, one going down the bottom, and so on round.
+ *
+ * Corners are handed out one to a line, incoming first. A gateway's answer leaving by the
+ * same point the question arrived at reads as one line passing through rather than a
+ * decision being made, which is the whole thing the shape is there to show.
+ */
+export function meetDiamondsAtTheirVertex(edges: unknown[], nodeByIdMap: Map<string, any>) {
+  interface Contact {
+    edge: { points?: Point[] };
+    atStart: boolean;
+    neighbour: Point;
+    incoming: boolean;
+  }
+  const byNode = new Map<string, Contact[]>();
+
+  for (const edge of edges) {
+    const candidate = edge as {
+      points?: Point[];
+      start?: string;
+      end?: string;
+      isLayoutOnly?: boolean;
+    };
+    if (candidate.isLayoutOnly || !candidate.points || candidate.points.length < 2) {
+      continue;
+    }
+    for (const atStart of [true, false]) {
+      const id = atStart ? candidate.start : candidate.end;
+      if (!id || !meetsAtVertices(nodeByIdMap.get(id))) {
+        continue;
+      }
+      const points = candidate.points;
+      const neighbour = atStart ? points[1] : points[points.length - 2];
+      byNode.set(id, [
+        ...(byNode.get(id) ?? []),
+        { edge: candidate, atStart, neighbour, incoming: !atStart },
+      ]);
+    }
+  }
+
+  for (const [id, contacts] of byNode) {
+    const node = nodeByIdMap.get(id);
+    const taken = new Set<VertexSide>();
+    // Incoming first: an answer may be moved off its natural corner, a question may not.
+    const ordered = [...contacts].sort((a, b) => Number(b.incoming) - Number(a.incoming));
+
+    for (const contact of ordered) {
+      const prefs = preferredSides(node, contact.neighbour);
+      const side = prefs.find((s) => !taken.has(s)) ?? prefs[0];
+      taken.add(side);
+      const vertex = vertexOf(node, side);
+      const points = contact.edge.points;
+      if (!vertex || !points || points.length < 2) {
+        continue;
+      }
+      const alongY = side === 'top' || side === 'bottom';
+      const away = side === 'top' || side === 'left' ? -1 : 1;
+
+      // The rest of the line, read from the corner inwards.
+      const rest = contact.atStart ? points.slice(1) : points.slice(0, -1);
+      const inward = contact.atStart ? rest : [...rest].reverse();
+
+      // A corner is a point, so the line has to leave it along the corner's own axis
+      // before it may turn. Start from the first place the line has actually cleared the
+      // corner on that axis: anything before it was drawn beside the shape, going the
+      // wrong way to reach a point it had already been given.
+      const cleared = inward.findIndex((p) =>
+        alongY ? (p.y - vertex.y) * away > 1e-6 : (p.x - vertex.x) * away > 1e-6
+      );
+      const tail = cleared >= 0 ? inward.slice(cleared) : inward;
+      const first = tail[0] ?? vertex;
+      const corner = alongY ? { x: vertex.x, y: first.y } : { x: first.x, y: vertex.y };
+      const needsCorner =
+        Math.abs(corner.x - first.x) > 1e-6 || Math.abs(corner.y - first.y) > 1e-6;
+
+      const ordered = [vertex, ...(needsCorner ? [corner] : []), ...tail];
+      const joined = contact.atStart ? ordered : [...ordered].reverse();
+      contact.edge.points = dropAxisBacktracks(joined);
+    }
+  }
+}
