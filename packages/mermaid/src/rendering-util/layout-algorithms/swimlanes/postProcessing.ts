@@ -2,6 +2,7 @@
 import type { LayoutData } from '../../types.js';
 import {
   clipEdgeEndpointsToNodeBoundaries,
+  approachBordersSquarely,
   cropEdgeEndsToShapes,
   meetDiamondsAtTheirVertex,
   prepareEdgeEndpointsForRenderer,
@@ -191,6 +192,7 @@ export function postProcessSwimlaneLayout(layout: LayoutData, direction?: string
   // in between. Trimming can only ever shorten a line, so it cannot reach anything new.
   cropEdgeEndsToShapes(edges, nodeByIdMap);
   meetDiamondsAtTheirVertex(edges, nodeByIdMap);
+  approachBordersSquarely(edges, nodeByIdMap);
   // That drops the run a line used to make out of the shape, so a label placed against
   // the old polyline is left standing where the line no longer goes.
   anchorLabelsToPolyline(edges, nodeByIdMap);

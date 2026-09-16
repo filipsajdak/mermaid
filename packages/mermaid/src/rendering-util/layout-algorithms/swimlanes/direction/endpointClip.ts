@@ -785,3 +785,88 @@ export function cropEdgeEndsToShapes(edges: unknown[], nodeByIdMap: Map<string, 
     }
   }
 }
+
+/** How far off a border a line is pulled so it can come back in square to it. */
+const SQUARE_APPROACH_STUB = 18;
+
+/**
+ * BPMN shapes drawn as a flat-sided box, which a line must therefore meet head on.
+ *
+ * Scoped to these because a swimlane diagram's own routes are validated against rails
+ * that legitimately run down a node's side and stop there; only the notation's shapes
+ * carry an arrowhead whose direction is read as meaning.
+ */
+const FLAT_SIDED_SHAPES = new Set([
+  'bpmn-activity',
+  'bpmn-data',
+  'bpmn-data-store',
+  'bpmn-annotation',
+]);
+
+/**
+ * Turns a line to face the shape it ends at.
+ *
+ * A rail laid along a node's own edge reaches the shape without ever turning towards it.
+ * The arrowhead is drawn along the line, so it comes to lie flat against the border
+ * rather than pointing through it: the line has arrived beside the shape, not at it.
+ *
+ * Pulling the rail off the border by a stub and coming back across it turns the last
+ * segment to face the shape, which is the direction the arrowhead is then drawn from.
+ */
+export function approachBordersSquarely(edges: unknown[], nodeByIdMap: Map<string, any>) {
+  for (const edge of edges) {
+    const candidate = edge as {
+      points?: Point[];
+      start?: string;
+      end?: string;
+      isLayoutOnly?: boolean;
+    };
+    if (candidate.isLayoutOnly || !candidate.points || candidate.points.length < 2) {
+      continue;
+    }
+    for (const atStart of [true, false]) {
+      const id = atStart ? candidate.start : candidate.end;
+      const node = id ? nodeByIdMap.get(id) : undefined;
+      if (!node || node.isGroup || !FLAT_SIDED_SHAPES.has(node.shape)) {
+        continue;
+      }
+      const rect = endpointRectOf(node);
+      const points = candidate.points;
+      if (!rect || !points || points.length < 2) {
+        continue;
+      }
+      const ordered: Point[] = atStart ? [...points] : [...points].reverse();
+      const end: Point = ordered[0];
+      // The renderer is handed a duplicated endpoint, so the neighbour that says which way
+      // the line arrives is the first one that is somewhere else.
+      const nextIndex = ordered.findIndex(
+        (q, i) => i > 0 && (Math.abs(q.x - end.x) > 1e-6 || Math.abs(q.y - end.y) > 1e-6)
+      );
+      if (nextIndex < 0) {
+        continue;
+      }
+      const next: Point = ordered[nextIndex];
+      const alongY = Math.abs(end.x - next.x) < 1e-6 && Math.abs(end.y - next.y) > 1e-6;
+      const alongX = Math.abs(end.y - next.y) < 1e-6 && Math.abs(end.x - next.x) > 1e-6;
+      if (!alongY && !alongX) {
+        continue;
+      }
+      const onLeft = Math.abs(end.x - rect.left) < 1;
+      const onRight = Math.abs(end.x - rect.right) < 1;
+      const onTop = Math.abs(end.y - rect.top) < 1;
+      const onBottom = Math.abs(end.y - rect.bottom) < 1;
+      // Only where the line ran along the very border it stopped on.
+      if (!((alongY && (onLeft || onRight)) || (alongX && (onTop || onBottom)))) {
+        continue;
+      }
+      const away = alongY ? (onLeft ? -1 : 1) : onTop ? -1 : 1;
+      const rail: Point = alongY
+        ? { x: end.x + away * SQUARE_APPROACH_STUB, y: next.y }
+        : { x: next.x, y: end.y + away * SQUARE_APPROACH_STUB };
+      const turn: Point = alongY ? { x: rail.x, y: end.y } : { x: end.x, y: rail.y };
+      const rest: Point[] = ordered.slice(nextIndex);
+      const joined: Point[] = [end, turn, rail, ...rest];
+      candidate.points = atStart ? joined : [...joined].reverse();
+    }
+  }
+}
