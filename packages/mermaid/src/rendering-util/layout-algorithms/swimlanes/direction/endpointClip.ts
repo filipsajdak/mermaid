@@ -864,7 +864,13 @@ export function approachBordersSquarely(edges: unknown[], nodeByIdMap: Map<strin
         ? { x: end.x + away * SQUARE_APPROACH_STUB, y: next.y }
         : { x: next.x, y: end.y + away * SQUARE_APPROACH_STUB };
       const turn: Point = alongY ? { x: rail.x, y: end.y } : { x: end.x, y: rail.y };
-      const rest: Point[] = ordered.slice(nextIndex);
+      // The rail stands in for the point the line used to reach on the border, so that
+      // point is dropped - keeping it walks the line out to the border and back. It is
+      // only safe to drop where what follows is still square to the rail.
+      const after = ordered[nextIndex + 1];
+      const canDrop =
+        after && (Math.abs(after.x - rail.x) < 1e-6 || Math.abs(after.y - rail.y) < 1e-6);
+      const rest: Point[] = ordered.slice(canDrop ? nextIndex + 1 : nextIndex);
       const joined: Point[] = [end, turn, rail, ...rest];
       candidate.points = atStart ? joined : [...joined].reverse();
     }
