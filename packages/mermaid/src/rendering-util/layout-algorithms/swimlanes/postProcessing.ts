@@ -26,7 +26,7 @@ import { simplifyDetouredEdges } from './direction/detourSimplification.js';
 import { anchorLabelsToPolyline } from './direction/labelAnchoring.js';
 import { straightenCollinearSiblingDetours } from './direction/siblingSharedFaceRouting.js';
 import { nudgeSharedInteriorSubpaths } from './direction/sharedTrackNudging.js';
-import { pinAnchoredNodes, squareAnchoredEdges } from './anchoredNodes.js';
+import { clearAnchoredOverlaps, pinAnchoredNodes, squareAnchoredEdges } from './anchoredNodes.js';
 export { validateSwimlanesLayout } from './direction/validation.js';
 
 /** Applies direction transforms and post-routing cleanup to a swimlane layout. */
@@ -62,9 +62,13 @@ export function postProcessSwimlaneLayout(layout: LayoutData, direction?: string
     space: 'final',
     direction: direction === 'LR' || direction === 'RL' || direction === 'BT' ? direction : 'TB',
   });
+  // An artifact is placed from its host alone, so it can come to rest on one of its
+  // host's neighbours. Cleared before the stubs are squared, so the squaring meets it
+  // where it ends up.
+  const settledPins = clearAnchoredOverlaps(layout, pins);
   // Done before the polyline passes below, so a squared-up stub goes through the same
   // cleanup as every other edge rather than sitting outside it.
-  squareAnchoredEdges(layout, pins);
+  squareAnchoredEdges(layout, settledPins);
 
   // The bands now have their final geometry, which is what these two need: room between
   // participants, and then the links that run through it.

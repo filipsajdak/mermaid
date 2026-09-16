@@ -222,6 +222,71 @@ function drawnExtentOf(node: Node | undefined): { width: number; height: number 
     : undefined;
 }
 
+/** The box a node occupies, from its centre and extent. */
+const boxOf = (node: Node) => ({
+  left: (node.x ?? 0) - (node.width ?? 0) / 2,
+  right: (node.x ?? 0) + (node.width ?? 0) / 2,
+  top: (node.y ?? 0) - (node.height ?? 0) / 2,
+  bottom: (node.y ?? 0) + (node.height ?? 0) / 2,
+});
+
+const sharesSpace = (a: ReturnType<typeof boxOf>, b: ReturnType<typeof boxOf>) =>
+  a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+
+/** How far to step an anchored node out per try, and how many tries before giving up. */
+const CLEARING_STEP = 8;
+const CLEARING_TRIES = 24;
+
+/**
+ * Moves a node standing beside its host off anything it came to rest on.
+ *
+ * An anchored node is placed from its host and takes no part in the layout that placed
+ * everything else, so nothing has yet compared the two. Artifacts sharing a host are
+ * spread along the border by `packAlongBorder`, but ones hanging off different hosts are
+ * never measured against each other, and an artifact can land on a neighbour of its host.
+ *
+ * Only a node that stands *beside* its host is moved. One with no clearance sits on the
+ * border by definition - that is where the notation draws a boundary event - so sharing
+ * space with its host is what it is for, not a collision to resolve.
+ */
+export function clearAnchoredOverlaps(layout: LayoutData, pins: AnchorPin[]): AnchorPin[] {
+  const nodes = layout.nodes ?? [];
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const pinned = new Set(pins.map((pin) => pin.nodeId));
+  const settled = nodes.filter((node) => !node.isGroup && !pinned.has(node.id));
+  const placed: Node[] = [];
+  const cleared: AnchorPin[] = [];
+
+  for (const pin of pins) {
+    const node = byId.get(pin.nodeId);
+    const standsOff = (readAnchor(node)?.gap ?? 0) > 0;
+    if (!node || !standsOff) {
+      if (node) {
+        placed.push(node);
+      }
+      cleared.push(pin);
+      continue;
+    }
+
+    // Its own host is not an obstacle: the clearance already decided how far off it sits.
+    const obstacles = [...settled, ...placed].filter((other) => other.id !== pin.hostId);
+    let tries = 0;
+    while (
+      tries < CLEARING_TRIES &&
+      obstacles.some((other) => sharesSpace(boxOf(node), boxOf(other)))
+    ) {
+      node.x = (node.x ?? 0) + pin.outward.x * CLEARING_STEP;
+      node.y = (node.y ?? 0) + pin.outward.y * CLEARING_STEP;
+      tries++;
+    }
+
+    placed.push(node);
+    cleared.push(tries > 0 ? { ...pin, x: node.x ?? pin.x, y: node.y ?? pin.y } : pin);
+  }
+
+  return cleared;
+}
+
 export function pinAnchoredNodes(
   layout: LayoutData,
   opts: { space: 'canonical' | 'final'; direction: Direction }
