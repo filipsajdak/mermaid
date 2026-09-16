@@ -572,6 +572,21 @@ function vertexOf(node: any, side: VertexSide): Point | undefined {
   }
 }
 
+/**
+ * Whether the node writes a caption in the room below the mark it draws.
+ *
+ * Only asked of a gateway: its caption is the question being decided, the longest words
+ * on the diagram, and it is written directly under the diamond.
+ */
+function writesAQuestionBelow(node: any): boolean {
+  const drawn = node?.metadata?.drawnExtent;
+  return (
+    node?.shape === 'bpmn-gateway' &&
+    Boolean(drawn) &&
+    (node?.height ?? 0) - (drawn?.height ?? 0) > 1
+  );
+}
+
 /** The corners a line coming from `toward` would prefer, best first. */
 function preferredSides(node: any, toward: Point): VertexSide[] {
   const dx = toward.x - (node?.x ?? 0);
@@ -582,6 +597,12 @@ function preferredSides(node: any, toward: Point): VertexSide[] {
     bottom: dy,
     top: -dy,
   };
+  // Leaving by the bottom corner takes the line straight down through the question the
+  // gateway is asking. Going out to a side and turning down passes those words instead
+  // of through them, so the bottom is taken only when no side is free.
+  if (writesAQuestionBelow(node)) {
+    score.bottom = Number.NEGATIVE_INFINITY;
+  }
   return [...VERTEX_SIDES].sort((a, b) => score[b] - score[a]);
 }
 
