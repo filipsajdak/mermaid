@@ -185,6 +185,14 @@ export class BpmnDb {
     const artifactHosts = this.artifactHosts();
     for (const parsed of this.parsed.nodes) {
       const artifactHost = artifactHosts.get(parsed.id);
+      // A gateway writes its question underneath itself, and it is usually the longest
+      // caption on the diagram. A note put under such a host is read hard against those
+      // words, so a note about a gateway stands to its side instead, and is then read
+      // from its own right edge.
+      const besideHost =
+        parsed.kind === 'annotation' &&
+        artifactHost !== undefined &&
+        this.parsed.nodes.find((n) => n.id === artifactHost)?.kind === 'gateway';
       // A band is a pool or a lane, which the swimlane engine places. A group is drawn
       // around its members and carries no execution semantics, so it is a container
       // without being a band: it gets no lane role and constrains no placement.
@@ -205,7 +213,15 @@ export class BpmnDb {
             : {}),
           // An artifact stands beside its host rather than on its border, which is the
           // difference between annotating an activity and interrupting one.
-          ...(artifactHost ? { anchorTo: { hostId: artifactHost, gap: ARTIFACT_CLEARANCE } } : {}),
+          ...(artifactHost
+            ? {
+                anchorTo: {
+                  hostId: artifactHost,
+                  gap: ARTIFACT_CLEARANCE,
+                  ...(besideHost ? { side: 'left' as const } : {}),
+                },
+              }
+            : {}),
           // A data object's corner marker says whether the activity it is associated with
           // reads it or writes it, and whether it stands for one item or a set.
           ...(parsed.qualifier === 'input' || parsed.qualifier === 'output'
@@ -214,7 +230,10 @@ export class BpmnDb {
           ...(parsed.qualifier === 'collection' ? { isCollection: true } : {}),
           // A note is an open bracket down one side, so its line has only that side to
           // arrive on. The shape draws the bracket on the left; this says so to the layout.
-          ...(parsed.kind === 'annotation' ? { attachFace: 'left' } : {}),
+          // A note is an open bracket down one side, so its line has only that side to
+          // arrive on. The bracket faces what the note is about: a note standing to its
+          // host's left is read from its right edge, and one under it from its left.
+          ...(parsed.kind === 'annotation' ? { attachFace: besideHost ? 'right' : 'left' } : {}),
         },
         cssClasses: [
           `bpmn-${parsed.kind}`,

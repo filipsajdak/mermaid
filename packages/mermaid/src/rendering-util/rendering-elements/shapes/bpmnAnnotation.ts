@@ -23,23 +23,32 @@ export async function bpmnAnnotation<T extends SVGGraphicsElement>(
   const height = Math.max(28, bbox.height + padding * 2);
   const width = bbox.width + padding * 2 + 6;
 
+  // The bracket is drawn down the side the note's line arrives on, so it faces what the
+  // note is about. A note standing to the left of its host is read from its right edge.
+  const face = node.metadata?.attachFace === 'right' ? 'right' : 'left';
   const body = shapeSvg.insert('g', ':first-child').attr('class', 'bpmn-annotation-body');
   body
     .append('path')
     .attr('class', 'bpmn-annotation-bracket')
-    .attr('d', `M${-width / 2 + 6},${-height / 2} h-6 V${height / 2} h6`);
+    .attr(
+      'd',
+      face === 'right'
+        ? `M${width / 2 - 6},${-height / 2} h6 V${height / 2} h-6`
+        : `M${-width / 2 + 6},${-height / 2} h-6 V${height / 2} h6`
+    );
 
-  // The text sits to the right of the bracket rather than centred in a box.
+  // The text sits beside the bracket rather than centred in a box.
   positionLabelBelow(label, bbox, 0);
+  const textLeft = face === 'right' ? -width / 2 + padding : -width / 2 + padding + 6;
   label.attr(
     'transform',
-    `translate(${-width / 2 + padding + 6 - (bbox.x ?? 0) + (bbox.left ?? 0)},${-bbox.height / 2 - ((bbox.y ?? 0) - (bbox.top ?? 0))})`
+    `translate(${textLeft - (bbox.x ?? 0) + (bbox.left ?? 0)},${-bbox.height / 2 - ((bbox.y ?? 0) - (bbox.top ?? 0))})`
   );
 
   reserveBounds(shapeSvg, node, width, height);
   node.intersect = function (point) {
-    // The bracket is drawn down the left, and the line belongs on the bracket.
-    return faceProjectIntersect(node, width, height, point, 'left');
+    // The line belongs on the bracket, whichever side that was drawn down.
+    return faceProjectIntersect(node, width, height, point, face);
   };
   return shapeSvg;
 }
