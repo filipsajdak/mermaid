@@ -110,6 +110,66 @@ describe('anchored nodes in the swimlane pipeline', () => {
     }
   );
 
+  // An artifact standing *beside* its host needs room of its own. It is placed from the
+  // host and takes no part in the layout, so unless the room is charged to the host, the
+  // layout is free to put a branch exactly where the artifact will land - which is what a
+  // data store drawn on top of the task next to it looks like from here.
+  it.each(['TB', 'LR'])('gives an artifact beside its host room of its own (%s)', (direction) => {
+    const inLane = (id: string, width: number, height: number): Node =>
+      ({ id, isGroup: false, width, height, parentId: 'lane1' }) as Node;
+
+    // Both branches leave the gateway, so they share a layer and are spread side by side
+    // across the lane - the shape that puts a data store on the task beside it. The sizes
+    // are the ones from the reported diagram: the store is wider than its own host.
+    const layout = {
+      nodes: [
+        {
+          id: 'lane1',
+          isGroup: true,
+          width: 0,
+          height: 0,
+          metadata: { laneRole: 'lane', laneIndex: 0 },
+        } as unknown as Node,
+        inLane('gw', 50, 50),
+        inLane('first', 100, 116),
+        inLane('second', 100, 128),
+        {
+          id: 'store',
+          isGroup: false,
+          width: 195,
+          height: 110,
+          parentId: 'lane1',
+          metadata: { anchorTo: { hostId: 'first', gap: 18 } },
+        } as unknown as Node,
+      ],
+      edges: [
+        { id: 'e1', start: 'gw', end: 'first', type: 'normal' },
+        { id: 'e2', start: 'gw', end: 'second', type: 'normal' },
+      ],
+      config: { flowchart: { nodeSpacing: 40, rankSpacing: 80 } },
+      direction,
+      laneLayering: 'branches',
+    } as unknown as LayoutData;
+    runSwimlaneLayoutCore(layout);
+
+    const boxOf = (node: Node) => ({
+      left: (node.x ?? 0) - (node.width ?? 0) / 2,
+      right: (node.x ?? 0) + (node.width ?? 0) / 2,
+      top: (node.y ?? 0) - (node.height ?? 0) / 2,
+      bottom: (node.y ?? 0) + (node.height ?? 0) / 2,
+    });
+    const store = boxOf(find(layout, 'store'));
+    for (const id of ['second']) {
+      const other = boxOf(find(layout, id));
+      const shares =
+        store.left < other.right - 1 &&
+        store.right > other.left + 1 &&
+        store.top < other.bottom - 1 &&
+        store.bottom > other.top + 1;
+      expect({ id, shares }).toEqual({ id, shares: false });
+    }
+  });
+
   it('leaves an anchored node with a missing host in the ordinary layout', () => {
     const layout = buildLayout(
       [box('A'), box('B'), anchor('orphan', 'nope')],

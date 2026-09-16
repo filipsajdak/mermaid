@@ -354,7 +354,7 @@ export function applyLrDirectionTransform(
   // of its own, but it is still drawn inside the lane. Charging the room to the host,
   // whose position is settled by now, sizes the lane to hold it without depending on when
   // the standing-off node is finally placed.
-  const footprints = anchorFootprints(nodes);
+  const footprints = anchorFootprints(nodes, direction);
 
   for (const n of nodes) {
     // A band is the frame being measured here, so it cannot also count as its own content.

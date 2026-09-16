@@ -251,12 +251,21 @@ describe('standing a node off its host', () => {
 
   it('reports the room a run needs, so a caller can reserve it', () => {
     const nodes = [host('h'), stood('a', 20, { width: 40, height: 60 })];
-    expect(anchorFootprints(nodes).get('h')).toEqual({ across: 20, beyond: 80 });
+    // Across the page a node stands below its host, so it reaches by its height.
+    expect(anchorFootprints(nodes, 'LR').get('h')).toEqual({ across: 20, beyond: 80 });
+  });
+
+  it('measures the reach along the way the diagram runs', () => {
+    const nodes = [host('h'), stood('a', 20, { width: 40, height: 60 })];
+    // Downwards it stands to one side instead, so the same node reaches by its width and
+    // occupies its height along the border. Measuring the other one reserves too little,
+    // and whatever the layout put in the space it was not given is drawn over.
+    expect(anchorFootprints(nodes, 'TB').get('h')).toEqual({ across: 30, beyond: 60 });
   });
 
   it('leaves a node sitting on the border out of the reserved room', () => {
     const nodes = [host('h'), anchored('a', { hostId: 'h' }, { width: 40, height: 60 })];
-    expect(anchorFootprints(nodes).size).toBe(0);
+    expect(anchorFootprints(nodes, 'LR').size).toBe(0);
   });
 });
 

@@ -165,7 +165,10 @@ function packAlongBorder(spans: number[]): { offsets: number[]; total: number } 
  * The span follows the same pitch rule `pinAnchoredNodes` places them by, so a caller
  * reserving room and the pass that fills it cannot disagree.
  */
-export function anchorFootprints(nodes: Node[]): Map<string, { across: number; beyond: number }> {
+export function anchorFootprints(
+  nodes: Node[],
+  direction?: Direction
+): Map<string, { across: number; beyond: number }> {
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const buckets = new Map<string, Node[]>();
   for (const node of nodes) {
@@ -179,12 +182,18 @@ export function anchorFootprints(nodes: Node[]): Map<string, { across: number; b
     buckets.set(hostId, [...(buckets.get(hostId) ?? []), node]);
   }
 
+  // Which way "past the border" runs. Laid out across the page a node stands below its
+  // host and reaches by its height; laid out downwards it stands to one side and reaches
+  // by its width. Measuring the wrong one reserves too little and the artifact is drawn
+  // over whatever the layout put in the space it was not given.
+  const outwardIsVertical = direction === 'LR' || direction === 'RL';
+  const reach = (node: Node) => (outwardIsVertical ? (node.height ?? 0) : (node.width ?? 0));
+  const alongBorder = (node: Node) => (outwardIsVertical ? (node.width ?? 0) : (node.height ?? 0));
+
   const footprints = new Map<string, { across: number; beyond: number }>();
   for (const [hostId, bucket] of buckets) {
-    const { total } = packAlongBorder(bucket.map((node) => node.width ?? 0));
-    const beyond = Math.max(
-      ...bucket.map((node) => (readAnchor(node)?.gap ?? 0) + (node.height ?? 0))
-    );
+    const { total } = packAlongBorder(bucket.map((node) => alongBorder(node)));
+    const beyond = Math.max(...bucket.map((node) => (readAnchor(node)?.gap ?? 0) + reach(node)));
     footprints.set(hostId, { across: total / 2, beyond });
   }
   return footprints;

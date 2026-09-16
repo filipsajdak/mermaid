@@ -1,6 +1,7 @@
 import type { Graph, OrderedLayers, Coordinates, NodeId, EdgeRef } from './helpers.js';
 import { COORDINATES } from './config.js';
 import { createTopLaneResolver, resolveTopLaneOrder } from './phase2.options.js';
+import { anchorFootprints } from './anchoredNodes.js';
 
 export interface CoordOptions {
   layerGap?: number; // vertical distance between layers
@@ -102,49 +103,97 @@ export function assignCoordinates(
   const lanesUsed = laneOrderGlobal.filter((L) => lanesUsedSet.has(L));
   const laneOrderColumns: (string | null)[] = [...(hasNullLane ? [null] : []), ...lanesUsed];
 
-  const laneWidth: Record<string, number> = Object.create(null);
-  for (const L of lanesUsed) {
-    laneWidth[L] = 0;
-  }
-  if (hasNullLane) {
-    (laneWidth as any).null = 0 as any;
+  /**
+   * How much of its lane a node needs across the lane.
+   *
+   * A node standing off another's border - an artifact beside the activity it annotates -
+   * is placed from that host rather than laid out, so it is absent from the graph and
+   * nothing here can see it. Its reach past the border is added to the host instead, or
+   * the lane is sized to contents it does not in fact contain, and the artifact is drawn
+   * over its neighbour or outside the band altogether.
+   */
+  const footprints = anchorFootprints(gWithDummies.layout?.nodes ?? [], direction);
+  const reachOf = (id: NodeId) => footprints.get(id)?.beyond ?? 0;
+
+  /**
+   * How a lane's members in one layer sit either side of the lane's flow axis.
+   *
+   * A layer's nodes are centred as a run, and an artifact standing beside the last of
+   * them reaches past the end of that run. So a lane is not symmetric about its flow: it
+   * needs `left` on one side and `left` plus everything trailing on the other. Sizing it
+   * by one number instead forces a choice between a flow that jogs layer to layer and an
+   * artifact drawn outside the band - which is both of the things this is here to stop.
+   *
+   * Sizing and placement read the same function, so the room reserved and the run that
+   * fills it cannot drift apart.
+   */
+  const runHalves = (
+    ids: NodeId[],
+    extentOf: (id: NodeId) => number
+  ): { spread: NodeId[]; beside: NodeId[]; left: number; right: number } => {
+    const centred = ids.filter((id) => inSomeFlow.has(id));
+    const loose = ids.filter((id) => !inSomeFlow.has(id));
+    const spread = centred.length > 0 ? centred : loose;
+    const beside = centred.length > 0 ? loose : [];
+
+    const extents = spread.map(extentOf);
+    const reaches = spread.map(reachOf);
+    // Room between two members pushes them apart; room past the last one does not, so it
+    // belongs to the trailing side rather than to the run that is centred.
+    const total =
+      extents.reduce((a, b) => a + b, 0) +
+      reaches.slice(0, -1).reduce((a, b) => a + b, 0) +
+      nodeGap * Math.max(0, spread.length - 1);
+    let tail = reaches.length > 0 ? reaches[reaches.length - 1] : 0;
+    for (const id of beside) {
+      tail += nodeGap + extentOf(id) + reachOf(id);
+    }
+    return { spread, beside, left: total / 2, right: total / 2 + tail };
+  };
+
+  // Lane room is measured on whichever axis asks for more. Spreading follows the axis the
+  // direction transform will lay the nodes along, but being generous with the band itself
+  // costs space and never an overlap.
+  const laneSizeExtent = (id: NodeId) => Math.max(getWidth(id), crossExtent(id));
+
+  const laneHalves = new Map<string | null, { left: number; right: number }>();
+  for (const L of laneOrderColumns) {
+    laneHalves.set(L, { left: 0, right: 0 });
   }
   for (const layer of layers) {
-    const perLane: Record<string, string[]> = Object.create(null);
-    const nullIds: string[] = [];
+    const perLane = new Map<string | null, NodeId[]>();
     for (const id of layer) {
       const L = topLaneOf(id);
-      if (L === null) {
-        nullIds.push(id);
-      } else {
-        (perLane[L] ||= []).push(id);
+      perLane.set(L, [...(perLane.get(L) ?? []), id]);
+    }
+    for (const [L, ids] of perLane) {
+      const half = laneHalves.get(L);
+      if (!half) {
+        continue;
       }
-    }
-    for (const [L, ids] of Object.entries(perLane)) {
-      const total =
-        ids.reduce((s, id) => s + getWidth(id), 0) + nodeGap * Math.max(0, ids.length - 1);
-      laneWidth[L] = Math.max(laneWidth[L] ?? 0, total);
-    }
-    if (hasNullLane && nullIds.length) {
-      const totalNull =
-        nullIds.reduce((s, id) => s + getWidth(id), 0) + nodeGap * Math.max(0, nullIds.length - 1);
-      (laneWidth as any).null = Math.max((laneWidth as any).null ?? 0, totalNull) as any;
+      const { left, right } = runHalves(ids, (id) =>
+        L === null ? getWidth(id) : laneSizeExtent(id)
+      );
+      half.left = Math.max(half.left, left);
+      half.right = Math.max(half.right, right);
     }
   }
 
-  const centerX = new Map<string | null, number>();
+  // Where a lane's flow runs. Offset from the band's centre by however lopsided the band
+  // had to be, so every layer centres on the same line and the flow stays straight.
+  const laneAxis = new Map<string | null, number>();
   {
-    const widths = laneOrderColumns.map(
-      (L) => (L === null ? ((laneWidth as any).null as number) : laneWidth[L]) ?? 0
-    );
+    const widths = laneOrderColumns.map((L) => {
+      const half = laneHalves.get(L);
+      return (half?.left ?? 0) + (half?.right ?? 0);
+    });
     const totalW =
       widths.reduce((a, b) => a + b, 0) + laneGap * Math.max(0, laneOrderColumns.length - 1);
     let cursor = -totalW / 2;
     for (let i = 0; i < laneOrderColumns.length; i++) {
       const L = laneOrderColumns[i];
       const w = widths[i] ?? 0;
-      const cx = cursor + w / 2;
-      centerX.set(L, cx);
+      laneAxis.set(L, cursor + (laneHalves.get(L)?.left ?? w / 2));
       cursor += w;
       if (i < laneOrderColumns.length - 1) {
         cursor += laneGap;
@@ -169,39 +218,35 @@ export function assignCoordinates(
       if (nodesInLane.length === 0) {
         continue;
       }
-      const cx = centerX.get(L)!;
-      const centred = nodesInLane.filter((id) => inSomeFlow.has(id));
-      const loose = nodesInLane.filter((id) => !inSomeFlow.has(id));
-      // With nothing to centre on, the loose nodes are all there is to place.
-      const spread = centred.length > 0 ? centred : loose;
-      const beside = centred.length > 0 ? loose : [];
+      // Preserve phase 3 order while spreading nodes around the lane's flow axis.
+      // Only nodes belonging to a lane. The rest are the layout's own dummies, whose
+      // width is a label's width - keeping them on it spreads stacked edge labels
+      // further apart, which is what keeps them legible.
+      const extentOf = (id: NodeId) => (L === null ? getWidth(id) : crossExtent(id));
+      const axis = laneAxis.get(L) ?? 0;
+      const { spread, beside, left } = runHalves(nodesInLane, extentOf);
 
-      if (spread.length === 1 && beside.length === 0) {
-        const id = spread[0];
-        x[id] = cx;
+      const extents = spread.map(extentOf);
+      const reaches = spread.map(reachOf);
+      let start = axis - left;
+      for (const [i, id] of spread.entries()) {
+        const w = extents[i];
+        // Left-aligned in its slot, so the room an artifact needs follows the host it
+        // stands beside rather than being handed to the next node along.
+        x[id] = start + w / 2;
         y[id] = yOffset + layerH / 2;
-      } else {
-        // Preserve phase 3 order while spreading nodes around the lane center.
-        // Only nodes belonging to a lane. The rest are the layout's own dummies, whose
-        // width is a label's width - keeping them on it spreads stacked edge labels
-        // further apart, which is what keeps them legible.
-        const extentOf = (id: NodeId) => (L === null ? getWidth(id) : crossExtent(id));
-        const extents = spread.map(extentOf);
-        const total = extents.reduce((a, b) => a + b, 0) + nodeGap * (spread.length - 1);
-        let start = cx - total / 2;
-        for (const [i, id] of spread.entries()) {
-          const w = extents[i];
-          x[id] = start + w / 2;
-          y[id] = yOffset + layerH / 2;
-          start += w + nodeGap;
+        start += w;
+        if (i < spread.length - 1) {
+          start += reaches[i] + nodeGap;
         }
-        for (const id of beside) {
-          const w = extentOf(id);
-          start += nodeGap;
-          x[id] = start + w / 2;
-          y[id] = yOffset + layerH / 2;
-          start += w;
-        }
+      }
+      start += reaches.length > 0 ? reaches[reaches.length - 1] : 0;
+      for (const id of beside) {
+        const w = extentOf(id);
+        start += nodeGap;
+        x[id] = start + w / 2;
+        y[id] = yOffset + layerH / 2;
+        start += w + reachOf(id);
       }
     }
 
