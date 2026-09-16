@@ -384,10 +384,15 @@ export function pinAnchoredNodes(
       const clearance = entry.anchor.gap ?? 0;
       const span = ((horizontal ? entry.node.height : entry.node.width) ?? 0) / 2;
       const push = clearance > 0 ? clearance + span : 0;
+      // A flow runs through the middle of the node it joins, so anything standing off a
+      // side of it stands clear of that line rather than across it. Along the top or
+      // bottom there is no such line to clear, and the run is centred as it was.
+      const alongSide = ((horizontal ? entry.node.width : entry.node.height) ?? 0) / 2;
+      const clearOfFlow = !horizontal && clearance > 0 ? -(alongSide + ANCHOR_GAP) : 0;
       const x = horizontal ? hx + offset : hx + (side === 'right' ? hw / 2 + push : -hw / 2 - push);
       const y = horizontal
         ? hy + (side === 'bottom' ? hh / 2 + push : -hh / 2 - push)
-        : hy + offset;
+        : hy + offset + clearOfFlow;
       entry.node.x = x;
       entry.node.y = y;
       pins.push({ nodeId: entry.node.id, hostId, side, x, y, outward: OUTWARD[side] });
