@@ -202,27 +202,8 @@ export function anchorFootprints(nodes: Node[]): Map<string, { across: number; b
  * event, and means the caller does not have to know how tall the anchored node is.
  */
 /**
- * The extent a shape draws, when it recorded one that differs from the box it reserved.
- *
- * A gateway or an event keeps room for a caption it does not fill, so its reserved box
- * grows with the length of its label while the diamond or the ring stays the size the
- * notation gives it.
+ * The box a node occupies, from its centre and extent.
  */
-function drawnExtentOf(node: Node | undefined): { width: number; height: number } | undefined {
-  const raw = (node?.metadata as { drawnExtent?: unknown } | undefined)?.drawnExtent;
-  if (!raw || typeof raw !== 'object') {
-    return undefined;
-  }
-  const { width, height } = raw as Record<string, unknown>;
-  return typeof width === 'number' &&
-    typeof height === 'number' &&
-    Number.isFinite(width) &&
-    Number.isFinite(height)
-    ? { width, height }
-    : undefined;
-}
-
-/** The box a node occupies, from its centre and extent. */
 const boxOf = (node: Node) => ({
   left: (node.x ?? 0) - (node.width ?? 0) / 2,
   right: (node.x ?? 0) + (node.width ?? 0) / 2,
@@ -257,6 +238,25 @@ export function clearAnchoredOverlaps(layout: LayoutData, pins: AnchorPin[]): An
   const placed: Node[] = [];
   const cleared: AnchorPin[] = [];
 
+  /** The band the host sits in, which is as far as anything beside it may travel. */
+  const bandFor = (hostId: string) => {
+    let at = byId.get(hostId);
+    const seen = new Set<string>();
+    while (at?.parentId && !seen.has(at.parentId)) {
+      seen.add(at.parentId);
+      const parent = byId.get(at.parentId);
+      if (!parent) {
+        return undefined;
+      }
+      const role = (parent as { metadata?: { laneRole?: string } }).metadata?.laneRole;
+      if (role === 'lane' || role === 'pool') {
+        return boxOf(parent);
+      }
+      at = parent;
+    }
+    return undefined;
+  };
+
   for (const pin of pins) {
     const node = byId.get(pin.nodeId);
     const standsOff = (readAnchor(node)?.gap ?? 0) > 0;
@@ -270,6 +270,9 @@ export function clearAnchoredOverlaps(layout: LayoutData, pins: AnchorPin[]): An
 
     // Its own host is not an obstacle: the clearance already decided how far off it sits.
     const obstacles = [...settled, ...placed].filter((other) => other.id !== pin.hostId);
+    const band = bandFor(pin.hostId);
+    const startX = node.x ?? 0;
+    const startY = node.y ?? 0;
     let tries = 0;
     while (
       tries < CLEARING_TRIES &&
@@ -278,6 +281,22 @@ export function clearAnchoredOverlaps(layout: LayoutData, pins: AnchorPin[]): An
       node.x = (node.x ?? 0) + pin.outward.x * CLEARING_STEP;
       node.y = (node.y ?? 0) + pin.outward.y * CLEARING_STEP;
       tries++;
+      // An artifact belongs to the lane that holds what it annotates. Stepping it out of
+      // that lane trades an overlap for something worse: a shape adrift of the band it
+      // is read as part of. Where there is no room, it stays where it was put.
+      const moved = boxOf(node);
+      if (
+        band &&
+        (moved.left < band.left ||
+          moved.right > band.right ||
+          moved.top < band.top ||
+          moved.bottom > band.bottom)
+      ) {
+        node.x = startX;
+        node.y = startY;
+        tries = 0;
+        break;
+      }
     }
 
     placed.push(node);
@@ -321,14 +340,14 @@ export function pinAnchoredNodes(
   for (const bucket of buckets.values()) {
     const { hostId, side } = bucket[0];
     const host = byId.get(hostId);
-    // Measured against what the host draws, not the room it reserved: a note beside a
-    // gateway belongs beside the diamond, and putting it beside the caption instead
-    // leaves the association it carries pointing at nothing.
-    const drawn = drawnExtentOf(host);
+    // Measured against the room the host reserved, not the mark it draws. The reserved
+    // box is what the caption is written in, so standing a note off the mark instead
+    // puts the note on top of the words. Where the line *stops* is a different question,
+    // and the endpoint clipping answers that one against the mark.
     const hx = host?.x;
     const hy = host?.y;
-    const hw = drawn?.width ?? host?.width;
-    const hh = drawn?.height ?? host?.height;
+    const hw = host?.width;
+    const hh = host?.height;
     if (
       typeof hx !== 'number' ||
       typeof hy !== 'number' ||
