@@ -11,6 +11,8 @@ BPMN 2.0 is the notation most organisations already use to draw a process, and i
 
 A diagram is written line by line, and **indentation expresses containment** — a lane indented under a pool belongs to it, and an activity indented under a lane sits in that lane. This is the same rule mindmaps and treeViews use.
 
+This page introduces the notation in the order you would draw it. To look up one BPMN element — what to write for it, or whether there is anything to write yet — see the [BPMN element reference](./bpmnElements.md).
+
 ## Basic example
 
 ```mermaid-example
