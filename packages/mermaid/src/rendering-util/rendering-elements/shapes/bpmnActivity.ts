@@ -25,8 +25,12 @@ export async function bpmnActivity<T extends SVGGraphicsElement>(
   const activityNode = node as BpmnNode;
   const { labelStyles, nodeStyles } = styles2String(node);
   node.labelStyle = labelStyles;
-  // Wrap the caption to the nominal box rather than to the node, which is not sized yet.
-  node.wrappingWidth = ACTIVITY_WIDTH - 16;
+  // The caption wraps where every other node's does, which leaves `labelHelper` to read
+  // `flowchart.wrappingWidth`. Wrapping it to the nominal box instead - 84px, the
+  // narrowest in the codebase - folded anything longer than three words into a column
+  // and grew the box downwards to hold it, so a task with a sentence for a name was
+  // drawn twice as tall as it was wide. A box only grows to fit words it cannot wrap,
+  // so leaving the wrap alone lets it grow the way it has room to, sideways.
 
   const { shapeSvg, bbox, label } = await labelHelper(
     parent,
