@@ -658,3 +658,111 @@ export function meetDiamondsAtTheirVertex(edges: unknown[], nodeByIdMap: Map<str
     }
   }
 }
+
+/**
+ * Where a segment first meets a rectangle, travelling from `a` to `b`.
+ *
+ * Liang-Barsky, which answers for the whole segment rather than for its ends, so a line
+ * that crosses a shape without stopping inside it is still found.
+ */
+function firstContact(a: Point, b: Point, r: RectBounds): Point | undefined {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const p = [-dx, dx, -dy, dy];
+  const q = [a.x - r.left, r.right - a.x, a.y - r.top, r.bottom - a.y];
+  let t0 = 0;
+  let t1 = 1;
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) {
+      if (q[i] < 0) {
+        return undefined;
+      }
+      continue;
+    }
+    const t = q[i] / p[i];
+    if (p[i] < 0) {
+      if (t > t1) {
+        return undefined;
+      }
+      if (t > t0) {
+        t0 = t;
+      }
+    } else {
+      if (t < t0) {
+        return undefined;
+      }
+      if (t < t1) {
+        t1 = t;
+      }
+    }
+  }
+  // A line that only brushes the border is not passing through: a rail laid alongside a
+  // shape touches it for its whole length without ever being aimed at it. Only a segment
+  // that puts real length inside the shape has crossed it.
+  const inside = (t1 - t0) * Math.hypot(dx, dy);
+  if (inside < 1) {
+    return undefined;
+  }
+  return { x: a.x + t0 * dx, y: a.y + t0 * dy };
+}
+
+/** Trims a polyline where it first touches `rect`, keeping the part before the contact. */
+function cropTail(points: Point[], rect: RectBounds): Point[] {
+  for (let i = 0; i < points.length - 1; i++) {
+    // Only along a square segment. Cropping a slanted one leaves the line ending on the
+    // slant, which is a worse fault than the one being repaired.
+    const square =
+      Math.abs(points[i].x - points[i + 1].x) < 1e-6 ||
+      Math.abs(points[i].y - points[i + 1].y) < 1e-6;
+    if (!square) {
+      continue;
+    }
+    const contact = firstContact(points[i], points[i + 1], rect);
+    if (contact) {
+      return [...points.slice(0, i + 1), contact];
+    }
+  }
+  return points;
+}
+
+/**
+ * Stops every line where it first meets the shape it names.
+ *
+ * The clipping above walks in from an end that already lies inside the shape. A line that
+ * passes clean through one - both its points outside, the segment between them crossing -
+ * leaves that walk nothing to start from, so the line is left running past the shape it
+ * was aimed at, and the renderer drags the arrowhead back across it to dock.
+ *
+ * Asking where the segment meets the border instead answers in every case, and the answer
+ * can only ever shorten the line, so it cannot reach anything it did not already cross.
+ */
+export function cropEdgeEndsToShapes(edges: unknown[], nodeByIdMap: Map<string, any>) {
+  for (const edge of edges) {
+    const candidate = edge as {
+      points?: Point[];
+      start?: string;
+      end?: string;
+      isLayoutOnly?: boolean;
+    };
+    if (candidate.isLayoutOnly || !candidate.points || candidate.points.length < 2) {
+      continue;
+    }
+    const src = candidate.start ? nodeByIdMap.get(candidate.start) : undefined;
+    const dst = candidate.end ? nodeByIdMap.get(candidate.end) : undefined;
+    if (src === dst || src?.isGroup || dst?.isGroup) {
+      continue;
+    }
+    let points = candidate.points;
+    const dstRect = dst ? endpointRectOf(dst) : undefined;
+    if (dstRect) {
+      points = cropTail(points, dstRect);
+    }
+    const srcRect = src ? endpointRectOf(src) : undefined;
+    if (srcRect) {
+      points = cropTail([...points].reverse(), srcRect).reverse();
+    }
+    if (points.length >= 2) {
+      candidate.points = points;
+    }
+  }
+}

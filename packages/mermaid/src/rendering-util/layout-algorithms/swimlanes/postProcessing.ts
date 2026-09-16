@@ -2,6 +2,7 @@
 import type { LayoutData } from '../../types.js';
 import {
   clipEdgeEndpointsToNodeBoundaries,
+  cropEdgeEndsToShapes,
   meetDiamondsAtTheirVertex,
   prepareEdgeEndpointsForRenderer,
 } from './direction/endpointClip.js';
@@ -183,6 +184,12 @@ export function postProcessSwimlaneLayout(layout: LayoutData, direction?: string
   // Last, once every rail is settled: bring the lines touching a rhombus onto its four
   // corners. Running earlier would let a later pass slide an endpoint back along a side
   // the shape does not in fact have there.
+  // Crop the ends last, the way bpmn-io does: a line is carried between the shapes'
+  // own centres and only trimmed to their borders once every rail has settled. Trimming
+  // earlier leaves the later passes free to slide an end along a rail and out past the
+  // shape it was aimed at, and the renderer then drags it back - across whatever stood
+  // in between. Trimming can only ever shorten a line, so it cannot reach anything new.
+  cropEdgeEndsToShapes(edges, nodeByIdMap);
   meetDiamondsAtTheirVertex(edges, nodeByIdMap);
   // That drops the run a line used to make out of the shape, so a label placed against
   // the old polyline is left standing where the line no longer goes.
