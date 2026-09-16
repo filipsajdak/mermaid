@@ -598,14 +598,22 @@ export const insertEdge = function (
   startNode,
   endNode,
   diagramId,
-  skipIntersect = false
+  skipIntersect = false,
+  layoutAlgorithm = undefined
 ) {
   if (!diagramId) {
     throw new Error(
       `insertEdge: missing diagramId for edge "${edge.id}" — edge IDs require a diagram prefix for uniqueness`
     );
   }
-  const { handDrawnSeed, layout } = getConfig();
+  const { handDrawnSeed, layout: configuredLayout } = getConfig();
+  // Which clipping to use is a question about the geometry that exists, so it is
+  // answered by the engine that drew it rather than by the one the config asks for. The
+  // two disagree whenever a diagram pins its own: bpmn is always laid out in swimlanes,
+  // while `layout` still resolves to whatever the global default happens to be. Reading
+  // the config there sent orthogonal swimlane routes through the clipping written for
+  // dagre, which empties a two-point route and then asks a shape to meet nothing.
+  const layout = layoutAlgorithm ?? configuredLayout;
   let points = edge.points;
   let pointsHasChanged = false;
   const tail = startNode;
