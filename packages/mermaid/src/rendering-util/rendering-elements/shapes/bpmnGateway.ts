@@ -50,7 +50,10 @@ export async function bpmnGateway<T extends SVGGraphicsElement>(
     positionLabelBelow(label, bbox, half + LABEL_GAP + bbox.height / 2);
   }
 
-  reserveBounds(shapeSvg, node, totalWidth, totalHeight);
+  reserveBounds(shapeSvg, node, totalWidth, totalHeight, {
+    width: GATEWAY_SIZE,
+    height: GATEWAY_SIZE,
+  });
 
   // A diamond's compass points are its vertices, which is where the notation attaches a
   // flow to a gateway, so the same docking rule gives the right answer here too.

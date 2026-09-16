@@ -2,6 +2,7 @@ import {
   dedupeConsecutivePoints,
   orthogonalizePolyline,
   pointInsideRect,
+  rectFromCenterSize,
   rectOfNodeBounds,
   samePoint,
   sameX,
@@ -25,6 +26,31 @@ interface EndpointEdge {
   end?: string;
 }
 
+/**
+ * The border a line should stop on, which is the one that is drawn.
+ *
+ * A shape reserving room for a caption it does not fill - a gateway, an event - is wider
+ * and taller than the diamond or ring a reader sees, and stopping on the reserved border
+ * leaves the arrow short of the shape by however long the label happened to be. A line
+ * already stopping outside the drawn border is left alone: this moves an endpoint in to
+ * meet the shape, never out to the box.
+ */
+function endpointRectOf(node: any): RectBounds | undefined {
+  const drawn = node?.metadata?.drawnExtent;
+  if (
+    drawn &&
+    typeof drawn.width === 'number' &&
+    typeof drawn.height === 'number' &&
+    Number.isFinite(drawn.width) &&
+    Number.isFinite(drawn.height) &&
+    typeof node.x === 'number' &&
+    typeof node.y === 'number'
+  ) {
+    return rectFromCenterSize(node.x, node.y, drawn.width, drawn.height);
+  }
+  return rectOfNodeBounds(node);
+}
+
 function endpointContextFor(edge: unknown, nodeByIdMap: Map<string, any>, minPoints: number) {
   const candidate = edge as EndpointEdge;
   if (candidate.isLayoutOnly || !candidate.points || candidate.points.length < minPoints) {
@@ -35,8 +61,8 @@ function endpointContextFor(edge: unknown, nodeByIdMap: Map<string, any>, minPoi
   return {
     edge: candidate,
     points: candidate.points,
-    srcRect: src ? rectOfNodeBounds(src) : undefined,
-    dstRect: dst ? rectOfNodeBounds(dst) : undefined,
+    srcRect: src ? endpointRectOf(src) : undefined,
+    dstRect: dst ? endpointRectOf(dst) : undefined,
   };
 }
 

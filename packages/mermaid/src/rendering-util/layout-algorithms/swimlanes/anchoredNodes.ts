@@ -201,6 +201,27 @@ export function anchorFootprints(nodes: Node[]): Map<string, { across: number; b
  * The centre sits exactly on the border line, which is where BPMN draws a boundary
  * event, and means the caller does not have to know how tall the anchored node is.
  */
+/**
+ * The extent a shape draws, when it recorded one that differs from the box it reserved.
+ *
+ * A gateway or an event keeps room for a caption it does not fill, so its reserved box
+ * grows with the length of its label while the diamond or the ring stays the size the
+ * notation gives it.
+ */
+function drawnExtentOf(node: Node | undefined): { width: number; height: number } | undefined {
+  const raw = (node?.metadata as { drawnExtent?: unknown } | undefined)?.drawnExtent;
+  if (!raw || typeof raw !== 'object') {
+    return undefined;
+  }
+  const { width, height } = raw as Record<string, unknown>;
+  return typeof width === 'number' &&
+    typeof height === 'number' &&
+    Number.isFinite(width) &&
+    Number.isFinite(height)
+    ? { width, height }
+    : undefined;
+}
+
 export function pinAnchoredNodes(
   layout: LayoutData,
   opts: { space: 'canonical' | 'final'; direction: Direction }
@@ -235,10 +256,14 @@ export function pinAnchoredNodes(
   for (const bucket of buckets.values()) {
     const { hostId, side } = bucket[0];
     const host = byId.get(hostId);
+    // Measured against what the host draws, not the room it reserved: a note beside a
+    // gateway belongs beside the diamond, and putting it beside the caption instead
+    // leaves the association it carries pointing at nothing.
+    const drawn = drawnExtentOf(host);
     const hx = host?.x;
     const hy = host?.y;
-    const hw = host?.width;
-    const hh = host?.height;
+    const hw = drawn?.width ?? host?.width;
+    const hh = drawn?.height ?? host?.height;
     if (
       typeof hx !== 'number' ||
       typeof hy !== 'number' ||

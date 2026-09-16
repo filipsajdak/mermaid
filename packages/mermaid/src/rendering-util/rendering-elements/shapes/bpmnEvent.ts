@@ -66,7 +66,10 @@ export async function renderBpmnEvent<T extends SVGGraphicsElement>(
     positionLabelBelow(label, bbox, radius + LABEL_GAP + bbox.height / 2);
   }
 
-  reserveBounds(shapeSvg, node, totalWidth, totalHeight);
+  reserveBounds(shapeSvg, node, totalWidth, totalHeight, {
+    width: EVENT_DIAMETER,
+    height: EVENT_DIAMETER,
+  });
 
   // Dock on the circle, not on the reserved box that includes the caption, and on a
   // compass point rather than wherever the line happens to cross the arc, so a flow

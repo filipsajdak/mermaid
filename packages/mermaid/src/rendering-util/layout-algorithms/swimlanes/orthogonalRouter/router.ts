@@ -249,9 +249,23 @@ export function routeEdgesOrthogonal(data: LayoutData, direction?: string): Layo
   // Direct port-for-side helper. Used by Step 6.2's sibling side-split
   // reassignment so the main routing loop can honor a side that does
   // not match `getOrthogonalPort`'s natural choice.
+  /**
+   * Where a line meets a node, which is the border the node draws.
+   *
+   * A shape reserving room for a caption it does not fill - a BPMN gateway, an event -
+   * is bigger than the diamond or ring a reader sees. Leaving from the reserved border
+   * starts the line out in the caption band beside the mark, and the renderer, which
+   * docks to the mark, then has to drag that end back: the line arrives slanted, or
+   * doubles back around the shape to reach the face it was meant to leave from.
+   *
+   * Only the port moves. The reserved box stays the obstacle, so a line still routes
+   * around the caption rather than across the words.
+   */
   const portForSide = (node: MermaidNode, side: OrthogonalSide): Point => {
-    const w = node.width ?? 10;
-    const h = node.height ?? 10;
+    const drawn = (node as { metadata?: { drawnExtent?: { width?: number; height?: number } } })
+      .metadata?.drawnExtent;
+    const w = drawn?.width ?? node.width ?? 10;
+    const h = drawn?.height ?? node.height ?? 10;
     const cx = node.x ?? 0;
     const cy = node.y ?? 0;
     switch (side) {
@@ -2198,6 +2212,16 @@ export function routeEdgesOrthogonal(data: LayoutData, direction?: string): Layo
       newPoints.push(pDstPort);
     }
 
+    // And that we start at pSrcPort, for the same reason the end is protected above.
+    // The rails are laid between the shapes, so rebuilding the line from them alone
+    // begins it wherever the first rail happens to start. That is the reserved border
+    // for a shape that reserves more than it draws, which leaves the line starting in
+    // the caption band beside the mark rather than on it.
+    const first = newPoints[0];
+    if (first && (Math.abs(first.x - pSrcPort.x) > EPS || Math.abs(first.y - pSrcPort.y) > EPS)) {
+      newPoints.unshift(pSrcPort);
+    }
+
     const filtered: Point[] = [];
     if (newPoints.length > 0) {
       filtered.push(newPoints[0]);
@@ -2238,8 +2262,15 @@ export function routeEdgesOrthogonal(data: LayoutData, direction?: string): Layo
   const nodeBoundaryClamp = (p: Point, node: MermaidNode): Point => {
     const cx = node.x ?? 0;
     const cy = node.y ?? 0;
-    const w = node.width ?? 0;
-    const h = node.height ?? 0;
+    // The boundary a line should sit on is the one the shape draws. A shape reserving
+    // room for a caption it does not fill is bigger than the mark a reader sees, so
+    // snapping to the reserved rect pushes an endpoint that correctly met the mark back
+    // out into the caption band beside it - and the line then runs from there, around
+    // the shape, to reach the face it already had.
+    const drawn = (node as { metadata?: { drawnExtent?: { width?: number; height?: number } } })
+      .metadata?.drawnExtent;
+    const w = drawn?.width ?? node.width ?? 0;
+    const h = drawn?.height ?? node.height ?? 0;
     if (w <= 0 || h <= 0) {
       return p;
     }

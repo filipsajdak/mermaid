@@ -132,8 +132,16 @@ export const reserveBounds = (
   shapeSvg: D3Selection<SVGGElement>,
   node: Node,
   width: number,
-  height: number
+  height: number,
+  drawn?: { width: number; height: number }
 ) => {
+  // What the layout reserves and what the reader sees are not the same box: a caption is
+  // kept clear of its neighbours but is not part of the shape an edge meets or a note
+  // stands beside. Recording the drawn extent lets those decisions be made against it,
+  // rather than against a box that grows with the length of a label.
+  if (drawn) {
+    node.metadata = { ...(node.metadata ?? {}), drawnExtent: drawn };
+  }
   const outline = shapeSvg
     .insert('rect', ':first-child')
     .attr('class', 'bpmn-bounds')
