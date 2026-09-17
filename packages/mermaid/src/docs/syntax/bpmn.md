@@ -11,6 +11,8 @@ BPMN 2.0 is the notation most organisations already use to draw a process, and i
 
 A diagram is written line by line, and **indentation expresses containment** — a lane indented under a pool belongs to it, and an activity indented under a lane sits in that lane. This is the same rule mindmaps and treeViews use.
 
+This page introduces the notation in the order you would draw it. To look up one BPMN element — what to write for it, or whether there is anything to write yet — see the [BPMN element reference](./bpmnElements.md).
+
 ## Basic example
 
 ```mermaid-example
@@ -98,27 +100,15 @@ An event is written as its position, an optional trigger, then the name and labe
 | `boundary`     | Attached to an activity's border, see below               |
 | `end`          | Ends the process — a thick circle                         |
 
-All thirteen triggers of BPMN 2.0.2 are available - `none`, `message`, `timer`, `error`, `escalation`, `cancel`, `compensation`, `conditional`, `link`, `signal`, `terminate`, `multiple` and `parallel-multiple` - each at the positions the notation draws it. An `x` marks a pair that can be written.
+All thirteen triggers of BPMN 2.0.2 are available - `none`, `message`, `timer`, `error`, `escalation`, `cancel`, `compensation`, `conditional`, `link`, `signal`, `terminate`, `multiple` and `parallel-multiple` - each at the positions the notation draws it.
 
-| Trigger             | `start` | `intermediate` | `throw` | `boundary` | `end` |
-| ------------------- | ------- | -------------- | ------- | ---------- | ----- |
-| `none`              | x       |                | x       |            | x     |
-| `message`           | x       | x              | x       | x          | x     |
-| `timer`             | x       | x              |         | x          |       |
-| `error`             | x\*     |                |         | x          | x     |
-| `escalation`        | x\*     |                | x       | x          | x     |
-| `cancel`            |         |                |         | x\*\*      | x\*\* |
-| `compensation`      | x\*     |                | x       | x          | x     |
-| `conditional`       | x       | x              |         | x          |       |
-| `link`              |         | x              | x       |            |       |
-| `signal`            | x       | x              | x       | x          | x     |
-| `terminate`         |         |                |         |            | x     |
-| `multiple`          | x       | x              | x       | x          | x     |
-| `parallel-multiple` | x       | x              |         | x          |       |
+<!--@include: virtual:bpmnEventMatrix -->
 
-\* `error`, `escalation` and `compensation` start an _event sub-process_ rather than a process. There is no syntax for one yet, so they are accepted on any `start`.
-
-\*\* `cancel` belongs to a _transaction_. There is no syntax for one yet, so it is accepted on any `boundary` or `end`.
+Two rows are wider here than in the notation, because the grammar cannot yet express the
+containment the notation reads them in. `error`, `escalation` and `compensation` start an
+_event sub-process_ rather than a process, and `cancel` belongs to a _transaction_; there
+is no syntax for either, so they are accepted on any `start`, and on any `boundary` or
+`end`, respectively.
 
 A pair the notation does not draw is refused while the diagram is read, naming the line and where that trigger does belong:
 
@@ -281,12 +271,11 @@ bpmn-beta LR
 
 The `bpmn` config namespace controls spacing:
 
-| Key              | Default | Meaning                                        |
-| ---------------- | ------- | ---------------------------------------------- |
-| `nodeSpacing`    | `50`    | Distance between two elements in the same rank |
-| `rankSpacing`    | `60`    | Distance between two ranks                     |
-| `diagramPadding` | `12`    | Padding around the whole diagram               |
-| `titleTopMargin` | `25`    | Margin above the diagram title                 |
+<!--@include: virtual:bpmnConfig -->
+
+A BPMN process is drawn in pools and lanes, so `layout` is declared in the schema rather
+than forced by the renderer: it sits below a `layout` of your own, and the diagram is laid
+out in swimlanes whichever you choose.
 
 ```mermaid-example
 ---

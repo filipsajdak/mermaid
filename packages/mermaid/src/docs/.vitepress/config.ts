@@ -198,9 +198,9 @@ function sidebarSyntax() {
         { text: 'Cynefin 🔥', link: '/syntax/cynefin' },
         { text: 'TreeView 🔥', link: '/syntax/treeView' },
         // Agentflow and BPMN are deliberately not listed while they are beta. The
-        // pages at `/syntax/agentflow` and `/syntax/bpmn` still build and are
-        // reachable by URL; they are just not announced in the nav until the
-        // syntax is declared stable.
+        // pages at `/syntax/agentflow`, `/syntax/bpmn` and `/syntax/bpmnElements`
+        // still build and are reachable by URL; they are just not announced in the
+        // nav until the syntax is declared stable.
         { text: 'Other Examples', link: '/syntax/examples' },
       ],
     },
