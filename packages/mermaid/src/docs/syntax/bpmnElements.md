@@ -34,8 +34,9 @@ label gets an id of its own - `task-1`, `xor-2` - which nothing else can refer t
 id to anything a flow names.
 
 An id starts with a letter or `_`, continues with word characters, and may carry internal
-hyphens: `order`, `check_stock`, `step-2`. A keyword cannot be used as an id, so `start`,
-`end`, `data` and `message` are unavailable, while `starter`, `database` and `titles` are fine.
+hyphens: `order`, `check_stock`, `step-2`. A keyword is recognised only as the first word of a
+declaration, so a word like `start`, `end`, `data` or `message` is still free to use as an id or a
+flow endpoint anywhere else, as are `starter`, `database` and `titles`.
 
 A label is always double-quoted, on one line, and cannot itself contain a double quote.
 
@@ -124,8 +125,9 @@ bpmn-beta LR
 | `event-gateway` | Event-based |
 | `complex`       | Complex     |
 
-These five words are the only spellings accepted. `exclusive`, `parallel`, `inclusive` and
-`gateway` are not keywords and will be read as ids.
+These are the canonical spellings. In the keyword position the tolerant input also accepts
+`exclusive` or `decision` for `xor`, `parallel` for `and`, and `inclusive` for `or`; `gateway` is
+not a keyword and is read as an id.
 
 A gateway's branches are told apart by the labels on the flows leaving it, not by any syntax
 on the gateway itself.
