@@ -315,6 +315,118 @@ bpmn-beta LR
   s1 --> t1 --> gw --> e1
 ```
 
+## Tolerant input
+
+So that a near-miss still parses, the element keyword — the first word of a declaration — is matched case-insensitively and accepts a few common synonyms. The tolerance applies only in that position: the same word used as an id, a flow endpoint or a label stays a literal identifier, so `task lr "Left to right"` names a task `lr` and `begin --> stop` is a flow between nodes called `begin` and `stop`.
+
+| Canonical       | Also accepted                 |
+| --------------- | ----------------------------- |
+| `pool`          | `participant`                 |
+| `lane`          | `swimlane`                    |
+| `start`         | `begin`                       |
+| `end`           | `stop`                        |
+| `task`          | `activity`, `step`            |
+| `xor`           | `exclusive`, `decision`       |
+| `and`           | `parallel`                    |
+| `or`            | `inclusive`                   |
+| `event-gateway` | `event-based`, `eventgateway` |
+| `data-store`    | `datastore`                   |
+| `note`          | `annotation`                  |
+
+A sequence flow may be written `→` and a message flow `=>` or `==>`. Directions accept any case. The shared `title`, `accTitle` and `accDescr` directives keep Mermaid's standard casing.
+
+## Validation
+
+A diagram is always checked against the trigger rules (a boundary event must name a trigger; a position only carries the triggers the notation draws on it). Beyond those, BPMN has a catalogue of semantic rules that are **opt-in**: by default they never block rendering, so a diagram behaves exactly as it does without them. Turn them on with the `bpmn.strict` config option — globally through `mermaid.initialize`, or per diagram in the frontmatter — and `mermaid.parse` then rejects an offending diagram with one error listing every violation, each naming the offending id or line, the rule, and a copy-and-paste fix.
+
+```mermaid-example
+---
+config:
+  bpmn:
+    strict: true
+---
+bpmn-beta LR
+  lane "L"
+    start s1 "Order received"
+    task t1 "Review"
+    end e1 "Filed"
+  s1 --> t1 --> e1
+```
+
+The catalogue covers:
+
+- **Reachability** — checked per connected component: in a fragment that names a start or an end event, every flow node must reach an end and be reachable from a start. A fragment with neither is treated as an implicit snippet and is left alone, so two independent fragments in one lane never fault each other, and a boundary event begins its own exception path.
+- **Start / end direction** — a start event with an incoming sequence flow, or an end event with an outgoing one.
+- **Pool crossing** — between two pooled nodes, a message flow must cross pools and a sequence flow must stay within one. A flow touching a node that is in no pool (a top-level lane) is not constrained.
+- **Ids** — a flow that references an undeclared id (with a "did you mean" suggestion), or a duplicate id.
+
+Flow labels are presentation only: because the grammar cannot tell a name from a condition, a label on any flow — including a branch out of a parallel gateway — is never treated as a rule violation.
+
+## Writing BPMN with an LLM
+
+The grammar, the tolerant input and the fix-suggesting messages are designed so a language model can generate BPMN reliably and repair it in one pass. Paste the block below into a system prompt to prime any model, then, with `bpmn.strict` on, feed `mermaid.parse`'s error back on a miss.
+
+```text
+You write Mermaid BPMN diagrams. Output only a fenced `mermaid` code block, no prose.
+
+Start with:  bpmn-beta LR      (direction LR, RL, TB, TD or BT; default LR)
+
+ELEMENTS — one per line, form: TYPE [QUALIFIER] id "Label"
+  EVENTS      <position> [trigger] id "..."
+              position: start | intermediate | boundary | end | throw
+              trigger : message timer error escalation cancel compensation
+                        conditional link signal terminate multiple parallel-multiple
+              (a boundary event MUST name a trigger; a start/end may omit it)
+  ACTIVITIES  [type] task id "..."     type: user service send receive manual script rule
+              subprocess id "..."      call id "..."
+  GATEWAYS    xor id "..."   (exclusive)     and id "..."   (parallel)
+              or id "..."    (inclusive)     event-gateway id "..."     complex id "..."
+  ARTIFACTS   data id "..."   data-input id "..."   data-output id "..."
+              data-collection id "..."   data-store id "..."   note id "..."
+
+CONTAINERS — indent members beneath them:
+  pool "Name"                 a participant / organization
+    lane "Name"               a role inside the pool
+      <elements...>
+  group "Name"                a visual grouping
+  A boundary event is indented under the activity it interrupts.
+
+FLOWS:
+  a --> b                     sequence flow (within one pool)
+  a -- label --> b            labelled sequence flow
+  a -.-> b                    message flow (across pools)
+  a ..> d1                    directed association (to/from an artifact)
+  a ... n1                    undirected association
+  chains ok: a --> b --> c
+
+RULES (a strict diagram rejects these):
+  1. Within a connected fragment that has a start or an end event, every flow node reaches
+     an end event and is reachable from a start.
+  2. start = no incoming flow; end = no outgoing flow.
+  3. Between two pooled nodes: a message flow (-.->) crosses pools, a sequence flow (-->)
+     stays within one.
+  4. A trigger may only sit at a position the notation draws it on.
+  5. Every id is unique; every flow references a declared id.
+
+EXAMPLE:
+bpmn-beta LR
+  pool "Shop"
+    lane "Sales"
+      start message s1 "Order received"
+      user task t1 "Review order"
+      xor g1 "Approved?"
+      service task t2 "Charge card"
+      end e1 "Shipped"
+      end e2 "Rejected"
+  s1 --> t1 --> g1
+  g1 -- approved --> t2 --> e1
+  g1 -- rejected --> e2
+```
+
+## Determinism
+
+The same source produces the same diagram, which matters for an automated evaluation loop or a diagram checked into version control. For a given configuration, the parse and the layout are deterministic: nodes and edges are emitted in a stable order, generated ids for anonymous elements are seeded per parse, and nothing depends on time, randomness or map-iteration order. The rendered SVG embeds the diagram id in its element ids, so two renders are byte-identical when given the same id. When the id is generated for you — as `mermaid.run` does — enable the `deterministicIds` config option so those ids, and every id Mermaid generates internally, are stable across runs too.
+
 ## Current limitations
 
 - An event sub-process and a transaction have no syntax, so the two rules that depend on one are wider here than in the notation: `error`, `escalation` and `compensation` are accepted on any `start`, and `cancel` on any `boundary` or `end`. Every other position and trigger pair is checked.
