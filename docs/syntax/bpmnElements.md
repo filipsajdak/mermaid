@@ -348,7 +348,7 @@ has syntax here.
 ## What the parser refuses
 
 Reading stops at the first error, and the diagram is replaced by the error diagram. There are
-eight kinds. Every message names the line and the column of the statement it refuses, except
+nine kinds. Every message names the line and the column of the statement it refuses, except
 that a lexing error also lists the character range.
 
 **A word it cannot read.** `Error lexing bpmn diagram: ... at line N, column C [start,end)`
@@ -398,6 +398,18 @@ BPMN error at line N, column C: the flow "a --> s" enters the start event "s", b
 BPMN error at line N, column C: the flow "e --> a" leaves the end event "e", but nothing flows out of an end event. Make "e" a throw event, or start the flow elsewhere.
 BPMN error at line N, column C: the sequence flow "a --> c" crosses from the pool "Shop" to the pool "Bank". A sequence flow stays inside one pool; draw a message flow, "a -.-> c".
 BPMN error at line N, column C: the message flow "a -.-> b" stays inside the pool "Shop". A message flow runs between pools; draw a sequence flow, "a --> b".
+```
+
+**An element left out of its flow.** A flow here is what one chain of sequence flows joins.
+In one that has a start event, every element must be reached from one; in one that has an end
+event, every element must reach one. A boundary event starts a path of its own, a `throw link`
+event closes one and an `intermediate link` event opens one, and a flow with neither a start
+nor an end event is not checked. A flow that breaks a rule is refused before any element it
+leaves unreached:
+
+```txt
+BPMN error at line N, column C: no start event reaches the task "b", though "s" starts its flow. Connect it, for example "s --> b".
+BPMN error at line N, column C: the xor "g" reaches no end event, though "e" ends its flow. Connect it, for example "g --> e".
 ```
 
 ## What it does not check

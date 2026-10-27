@@ -115,3 +115,98 @@ describe('bpmn flow rules', () => {
     ).not.toThrow();
   });
 });
+
+/** One lane, so only the sequence flows written after it decide what is reached. */
+const lane = (...lines: string[]) =>
+  `bpmn-beta LR\n  lane "L"\n${lines.map((line) => `    ${line}\n`).join('')}`;
+
+describe('bpmn reachability', () => {
+  it('takes a flow from a start event to an end event', () => {
+    expect(() =>
+      parseBpmn(lane('start s "S"', 'task a "A"', 'end e "E"') + '  s --> a --> e\n')
+    ).not.toThrow();
+  });
+
+  it('refuses an element no start event reaches', () => {
+    const source =
+      lane('start s "S"', 'task a "A"', 'user task b "B"', 'end e "E"') +
+      '  s --> a --> e\n  b --> e\n';
+    expect(() => parseBpmn(source)).toThrow(
+      'BPMN error at line 5, column 5: no start event reaches the task "b", though "s" starts its flow. Connect it, for example "s --> b".'
+    );
+  });
+
+  it('refuses an element that reaches no end event', () => {
+    const source =
+      lane('start s "S"', 'task a "A"', 'xor g "G"', 'end e "E"') + '  s --> a --> e\n  s --> g\n';
+    expect(() => parseBpmn(source)).toThrow(
+      'BPMN error at line 5, column 5: the xor "g" reaches no end event, though "e" ends its flow. Connect it, for example "g --> e".'
+    );
+  });
+
+  it('names an event by its position', () => {
+    const source =
+      lane('start s "S"', 'intermediate timer w "W"', 'end e "E"') + '  s --> e\n  s --> w\n';
+    expect(() => parseBpmn(source)).toThrow(/the intermediate event "w" reaches no end event/);
+  });
+
+  it('leaves a flow with neither a start nor an end event alone', () => {
+    expect(() => parseBpmn(lane('task a "A"', 'task b "B"') + '  a --> b\n')).not.toThrow();
+  });
+
+  it('checks each connected flow on its own', () => {
+    const source =
+      lane('start s "S"', 'task a "A"', 'task b "B"', 'end e "E"') + '  s --> a\n  b --> e\n';
+    expect(() => parseBpmn(source)).not.toThrow();
+  });
+
+  it('leaves an element no sequence flow touches alone', () => {
+    const source =
+      lane('start s "S"', 'task a "A"', 'end e "E"', 'task idle "Idle"') + '  s --> a --> e\n';
+    expect(() => parseBpmn(source)).not.toThrow();
+  });
+
+  it('starts a path at a boundary event', () => {
+    const source =
+      lane('start s "S"', 'task t "T"', '  boundary timer b "B"', 'task x "X"', 'end e "E"') +
+      '  s --> t --> e\n  b --> x --> e\n';
+    expect(() => parseBpmn(source)).not.toThrow();
+  });
+
+  it('carries a path through a pair of link events', () => {
+    const source =
+      lane(
+        'start s "S"',
+        'xor g "G"',
+        'throw link out "Out"',
+        'intermediate link in "In"',
+        'end e "E"'
+      ) + '  s --> g\n  g --> e\n  g --> out\n  in --> e\n';
+    expect(() => parseBpmn(source)).not.toThrow();
+  });
+
+  it('does not count a message flow as reaching an element', () => {
+    const source = `bpmn-beta LR
+  pool "Shop"
+    start s "S"
+    task a "A"
+    end e "E"
+  pool "Bank"
+    start s2 "S2"
+    intermediate message m "M"
+    end e2 "E2"
+  s --> a --> e
+  s2 --> e2
+  m --> e2
+  a -.-> m
+`;
+    expect(() => parseBpmn(source)).toThrow(/no start event reaches the intermediate event "m"/);
+  });
+
+  it('refuses a flow before an element it leaves unreached', () => {
+    const source =
+      lane('start s "S"', 'task a "A"', 'end e "E"', 'task b "B"') +
+      '  s --> a --> e\n  b --> e\n  e --> s\n';
+    expect(() => parseBpmn(source)).toThrow(/the flow "e --> s"/);
+  });
+});

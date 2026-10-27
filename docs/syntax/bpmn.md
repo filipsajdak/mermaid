@@ -299,6 +299,8 @@ Both ends of a flow must be declared elements. A flow that names an id nothing d
 
 A flow also has to be one the notation allows. A sequence flow stays inside one pool, never runs into a start event and never leaves an end event, and a message flow runs between pools. A flow that breaks one of these is refused the same way, with the fix in the message. An element in no pool, such as one in a lane written at the top level, is not checked against pools.
 
+In a flow that has a start event, every element must be reached from one, and in a flow that has an end event, every element must reach one. A flow here is what one chain of sequence flows joins, so two flows in one lane are checked apart, and a fragment with neither a start nor an end event is not checked. A boundary event starts a path of its own, and a pair of `link` events carries a path from the `throw` to the `intermediate` one.
+
 A message flow is drawn as a dashed line with an open arrowhead and a hollow circle at its source, which is how BPMN distinguishes a message between participants from a sequence flow inside one.
 
 An association is dotted rather than dashed, which is how the notation separates the two. It joins an artifact to what it belongs to and carries no order, so an element that is only associated does not take a place in the sequence.
