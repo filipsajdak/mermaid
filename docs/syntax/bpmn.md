@@ -507,6 +507,75 @@ bpmn-beta LR
   s1 --> t1 --> gw --> e1
 ```
 
+## Writing a diagram with a language model
+
+The block below is the syntax in a form a language model can be given as a system prompt. When `mermaid.parse` refuses what it writes, send the message back: it names the line, the column and what to change, and the parser stops at the first problem, so each round fixes one.
+
+```text
+You write Mermaid bpmn-beta diagrams. Answer with one fenced mermaid block and nothing else.
+
+HEADER
+  bpmn-beta LR        the direction is LR (the default), RL, TB, TD or BT
+
+ELEMENTS, one per line: [modifier] keyword [id] ["Label"]
+  Events      start, intermediate, boundary, end or throw, then a trigger:
+              message timer error escalation cancel compensation conditional link
+              signal terminate multiple parallel-multiple
+              An intermediate or boundary event must name a trigger. A trigger goes only
+              where BPMN draws it: terminate on an end, link on an intermediate or a throw.
+  Activities  task, subprocess or call; a task may start with a task type:
+              user service receive send manual script rule
+  Gateways    xor, and, or, event-gateway or complex
+  Artifacts   data, data-input, data-output, data-collection, data-store or note
+  Containers  pool, lane or group
+
+IDS AND LABELS
+  An id starts with a letter or _, then word characters and inner hyphens: check_stock, step-2.
+  A keyword is never an id: not start, end, task, data, message or any other word above.
+  Every id is declared once. Give an id to every element a flow names.
+  A label is in double quotes, on one line, with no double quote inside it.
+
+CONTAINMENT IS INDENTATION
+  pool "Shop"
+    lane "Sales"
+      task take "Take the order"
+  Only a pool, a lane or a group holds elements.
+  A boundary event is indented directly under the activity it is attached to.
+
+FLOWS, written after the elements, between declared ids
+  a --> b             sequence flow, inside one pool
+  a -- yes --> b      sequence flow with a label; no other flow takes one
+  a -.-> b            message flow, between pools; a pool id may be one of its ends
+  a ..> d             association pointing at d
+  a ... n             association with no head
+  a --> b --> c       a chain is one flow per arrow
+
+RULES. The parser refuses the first one broken, with its line and column.
+  1. Nothing flows into a start event, and nothing flows out of an end event.
+  2. A sequence flow never leaves its pool, and a message flow never stays inside one.
+  3. In a flow that has a start event every element is reached from one, and in a flow
+     that has an end event every element reaches one. A boundary event starts its own path.
+  4. Both ends of every flow are declared.
+
+EXAMPLE
+bpmn-beta LR
+  pool "Shop"
+    lane "Sales"
+      start message s1 "Order received"
+      user task t1 "Review order"
+      xor g1 "Approved?"
+      service task t2 "Charge card"
+      end e1 "Shipped"
+      end e2 "Rejected"
+  s1 --> t1 --> g1
+  g1 -- approved --> t2 --> e1
+  g1 -- rejected --> e2
+```
+
+## The same source, the same diagram
+
+For one configuration, a source is parsed and laid out the same way every time: its elements and flows come out in the same order, and an element written without an id gets the same one, from a counter that starts again with each diagram. The SVG carries the diagram's id in its own ids, so two renders given the same id are the same byte for byte. `mermaid.run` makes the id up itself, so set `deterministicIds` to keep that id, and every id Mermaid generates inside the diagram, the same from one run to the next.
+
 ## What this beta covers
 
 `bpmn-beta` draws BPMN 2.0.2 process and collaboration diagrams: pools and lanes, events with all thirteen triggers, the five gateway types, tasks with their task types, collapsed sub-processes and call activities, boundary events, sequence and message flows, associations, data objects and stores, text annotations and groups. The [BPMN element reference](./bpmnElements.md) lists every BPMN 2.0 element as supported, reachable through a workaround, or not written yet.
