@@ -199,6 +199,8 @@ Flows chain, so `a --> b --> c` declares two of them.
 
 Both ends of a flow must be declared elements. A flow that names an id nothing declares is refused while the diagram is read, with the flow and the missing id in the message.
 
+A flow also has to be one the notation allows. A sequence flow stays inside one pool, never runs into a start event and never leaves an end event, and a message flow runs between pools. A flow that breaks one of these is refused the same way, with the fix in the message. An element in no pool, such as one in a lane written at the top level, is not checked against pools.
+
 A message flow is drawn as a dashed line with an open arrowhead and a hollow circle at its source, which is how BPMN distinguishes a message between participants from a sequence flow inside one.
 
 An association is dotted rather than dashed, which is how the notation separates the two. It joins an artifact to what it belongs to and carries no order, so an element that is only associated does not take a place in the sequence.

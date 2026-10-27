@@ -4,6 +4,7 @@ import * as t from './bpmn.tokens.js';
 import { bpmnTokens } from './bpmn.tokens.js';
 import { TRIGGERS_BY_POSITION, positionsFor } from '../types.js';
 import { isKnownLocation, runChevrotainParse } from '../../common/parser/runChevrotainParse.js';
+import { violationsOf } from './bpmn.validate.js';
 
 const listOf = (items: string[]): string =>
   items.length > 1 ? `${items.slice(0, -1).join(', ')} or ${items[items.length - 1]}` : items[0];
@@ -525,6 +526,14 @@ function assertFlowsReferToDeclaredElements({ nodes, flows }: ParsedDiagram): vo
   }
 }
 
+/** A diagram that breaks a rule of the notation is refused at the first rule it breaks. */
+function assertFollowsTheNotation(diagram: ParsedDiagram): void {
+  const first = violationsOf(diagram).next();
+  if (!first.done) {
+    throw new Error(`BPMN error${atText(written.get(first.value.at))}: ${first.value.message}`);
+  }
+}
+
 const LINE_BREAK = /\r\n|\r|\n/;
 
 /** Where chevrotain's last error stands; a missing token (end of input) sits after the last character. */
@@ -550,6 +559,7 @@ export function parseBpmn(input: string): ParsedDiagram {
           visitor.reset();
           visitor.visit(cst);
           assertFlowsReferToDeclaredElements(visitor.result());
+          assertFollowsTheNotation(visitor.result());
         },
       },
       input
