@@ -187,11 +187,12 @@ test.describe('bpmn-beta elements', () => {
   pool p1 "Buyer"
     lane "Buying"
       task a "Order"
+      task c "Pay"
       note n "Why"
   pool p2 "Seller"
     lane "Selling"
       task b "Fulfil"
-  a --> b
+  a --> c
   a -.-> b
   n ... a
 `,

@@ -297,6 +297,10 @@ Flows chain, so `a --> b --> c` declares two of them.
 
 Both ends of a flow must be declared elements. A flow that names an id nothing declares is refused while the diagram is read, with the flow and the missing id in the message.
 
+A flow also has to be one the notation allows. A sequence flow stays inside one pool, never runs into a start event and never leaves an end event, and a message flow runs between pools. A flow that breaks one of these is refused the same way, with the fix in the message. An element in no pool, such as one in a lane written at the top level, is not checked against pools.
+
+In a flow that has a start event, every element must be reached from one, and in a flow that has an end event, every element must reach one. A flow here is what one chain of sequence flows joins, so two flows in one lane are checked apart, and a fragment with neither a start nor an end event is not checked. A boundary event starts a path of its own, and a pair of `link` events carries a path from the `throw` to the `intermediate` one.
+
 A message flow is drawn as a dashed line with an open arrowhead and a hollow circle at its source, which is how BPMN distinguishes a message between participants from a sequence flow inside one.
 
 An association is dotted rather than dashed, which is how the notation separates the two. It joins an artifact to what it belongs to and carries no order, so an element that is only associated does not take a place in the sequence.
@@ -502,6 +506,75 @@ bpmn-beta LR
     end e1 "End"
   s1 --> t1 --> gw --> e1
 ```
+
+## Writing a diagram with a language model
+
+The block below is the syntax in a form a language model can be given as a system prompt. When `mermaid.parse` refuses what it writes, send the message back: it names the line, the column and what to change, and the parser stops at the first problem, so each round fixes one.
+
+```text
+You write Mermaid bpmn-beta diagrams. Answer with one fenced mermaid block and nothing else.
+
+HEADER
+  bpmn-beta LR        the direction is LR (the default), RL, TB, TD or BT
+
+ELEMENTS, one per line: [modifier] keyword [id] ["Label"]
+  Events      start, intermediate, boundary, end or throw, then a trigger:
+              message timer error escalation cancel compensation conditional link
+              signal terminate multiple parallel-multiple
+              An intermediate or boundary event must name a trigger. A trigger goes only
+              where BPMN draws it: terminate on an end, link on an intermediate or a throw.
+  Activities  task, subprocess or call; a task may start with a task type:
+              user service receive send manual script rule
+  Gateways    xor, and, or, event-gateway or complex
+  Artifacts   data, data-input, data-output, data-collection, data-store or note
+  Containers  pool, lane or group
+
+IDS AND LABELS
+  An id starts with a letter or _, then word characters and inner hyphens: check_stock, step-2.
+  A keyword is never an id: not start, end, task, data, message or any other word above.
+  Every id is declared once. Give an id to every element a flow names.
+  A label is in double quotes, on one line, with no double quote inside it.
+
+CONTAINMENT IS INDENTATION
+  pool "Shop"
+    lane "Sales"
+      task take "Take the order"
+  Only a pool, a lane or a group holds elements.
+  A boundary event is indented directly under the activity it is attached to.
+
+FLOWS, written after the elements, between declared ids
+  a --> b             sequence flow, inside one pool
+  a -- yes --> b      sequence flow with a label; no other flow takes one
+  a -.-> b            message flow, between pools; a pool id may be one of its ends
+  a ..> d             association pointing at d
+  a ... n             association with no head
+  a --> b --> c       a chain is one flow per arrow
+
+RULES. The parser refuses the first one broken, with its line and column.
+  1. Nothing flows into a start event, and nothing flows out of an end event.
+  2. A sequence flow never leaves its pool, and a message flow never stays inside one.
+  3. In a flow that has a start event every element is reached from one, and in a flow
+     that has an end event every element reaches one. A boundary event starts its own path.
+  4. Both ends of every flow are declared.
+
+EXAMPLE
+bpmn-beta LR
+  pool "Shop"
+    lane "Sales"
+      start message s1 "Order received"
+      user task t1 "Review order"
+      xor g1 "Approved?"
+      service task t2 "Charge card"
+      end e1 "Shipped"
+      end e2 "Rejected"
+  s1 --> t1 --> g1
+  g1 -- approved --> t2 --> e1
+  g1 -- rejected --> e2
+```
+
+## The same source, the same diagram
+
+For one configuration, a source is parsed and laid out the same way every time: its elements and flows come out in the same order, and an element written without an id gets the same one, from a counter that starts again with each diagram. The SVG carries the diagram's id in its own ids, so two renders given the same id are the same byte for byte. `mermaid.run` makes the id up itself, so set `deterministicIds` to keep that id, and every id Mermaid generates inside the diagram, the same from one run to the next.
 
 ## What this beta covers
 
